@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 data class MainUIState(
     val isListening: Boolean = true,
     val liveTextString: String = "",
+    var suggestions: List<String>? = null,
 )
 class MainActivityViewModel : ViewModel() {
 
@@ -22,6 +23,15 @@ class MainActivityViewModel : ViewModel() {
             currentState.copy(
                 isListening = !currentState.isListening,
                 liveTextString = "Button Pressed",
+                suggestions = listOf("Fries", "Pasta", "Salad", "Tacos", "Sushi", "Pizza", "Beans", "Burgers")
+            )
+        }
+    }
+
+    fun suggestionReset() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                suggestions = null
             )
         }
     }

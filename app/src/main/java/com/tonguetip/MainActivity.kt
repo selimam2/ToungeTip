@@ -7,13 +7,17 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.size
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,6 +50,7 @@ fun MainScreen(
     viewModel: MainActivityViewModel = viewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
+    val suggestions = uiState.suggestions
 
     TongueTipTheme {
         Surface(
@@ -61,7 +66,41 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(100.dp))
                     LiveText(liveText = uiState.liveTextString)
                 }
-                SuggestionsButton()
+                if ( suggestions.isNullOrEmpty()) {
+                    SuggestionsButton()
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        itemsIndexed(suggestions) { index, _ ->
+                            if (index % 2 == 0) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().weight(1f),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    SuggestionBox(text = suggestions[index])
+                                    if (index + 1 < suggestions.size) {
+                                        SuggestionBox(text = suggestions[index + 1])
+                                    } else {
+                                        SuggestionBoxPlaceholder()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.suggestionReset() },
+                        modifier = Modifier
+                            .height(60.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text("Stop")
+                    }
+                }
                 Spacer(modifier = Modifier.height(180.dp))
             }
 
@@ -79,10 +118,7 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
         contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = {
-                val intent = Intent(context, SuggestionsListActivity::class.java)
-                context.startActivity(intent)
-            },
+            onClick = { viewModel.buttonTest() },
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.size(250.dp)
