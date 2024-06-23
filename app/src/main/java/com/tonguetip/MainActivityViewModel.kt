@@ -1,17 +1,22 @@
 package com.tonguetip
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class MainUIState(
     val isListening: Boolean = true,
     val liveTextString: String = "",
     var suggestions: List<String>? = null,
 )
+
 class MainActivityViewModel : ViewModel() {
+
+    private val chatGPTIntegration = ChatGPTIntegration()
 
     // Expose screen UI state
     private val _uiState = MutableStateFlow(MainUIState())
@@ -19,12 +24,16 @@ class MainActivityViewModel : ViewModel() {
 
     // Handle business logic
     fun buttonTest() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                isListening = !currentState.isListening,
-                liveTextString = "Button Pressed",
-                suggestions = listOf("Fries", "Pasta", "Salad", "Tacos", "Sushi", "Pizza", "Beans", "Burgers")
-            )
+        viewModelScope.launch {
+            // TODO: figure out a way to pass the actual context to this
+            val suggestions = chatGPTIntegration.getSuggestions("What's your favourite food?... I like...")
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isListening = !currentState.isListening,
+                    liveTextString = "Button Pressed",
+                    suggestions = suggestions
+                )
+            }
         }
     }
 

@@ -10,6 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 interface ChatGPTApi {
     @Headers("Content-Type: application/json")
@@ -54,4 +56,38 @@ class ChatGPTIntegration {
 
     private val api = retrofit.create(ChatGPTApi::class.java)
 
+    suspend fun getSuggestions(context: String): List<String> {
+        val prompt =
+            """
+            You help english language learners and people with aphasia communicate.
+            You will be provided with the conversation context to output relevant suggestions.
+            You must not output anything but a list of 8 comma-separated words.
+            You must not add any extra white space to the output.
+            The conversation context follows:
+            """.trimIndent() + context
+
+        val request = CompletionRequest(
+            model = "gpt-3.5-turbo-instruct", // TODO: add support for multiple models
+            prompt = prompt,
+            max_tokens = 50,
+            temperature = 0.5,
+            top_p = 0.9
+        )
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getCompletion(request).execute()
+                if (response.isSuccessful) {
+                    val completionText = response.body()?.choices?.firstOrNull()?.text ?: ""
+                    completionText.trim().split(",")
+                } else {
+                    Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
 }
