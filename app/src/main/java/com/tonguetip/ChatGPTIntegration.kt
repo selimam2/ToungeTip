@@ -24,7 +24,6 @@ data class CompletionRequest(
     val prompt: String,
     val max_tokens: Int,
     val temperature: Double,
-    val top_p: Double
 )
 
 data class CompletionResponse(
@@ -42,7 +41,7 @@ class ChatGPTIntegration {
         .addInterceptor(logging)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer API_KEY_DO_NOT_PUSH") // TODO: add API key here
+                .addHeader("Authorization", "Bearer sk-proj-5nH0Qj5ANpc6IrGcV4VbT3BlbkFJT3iOYi7wq8byE81n3PnG") // TODO: add API key here
                 .build()
             chain.proceed(request)
         }
@@ -60,18 +59,17 @@ class ChatGPTIntegration {
         val prompt =
             """
             You help english language learners and people with aphasia communicate.
-            You will be provided with the conversation context to output relevant suggestions.
+            You will be provided with the conversation context to output relevant suggestions that finish the sentence.
             You must not output anything but a list of 8 comma-separated words.
             You must not add any extra white space to the output.
-            The conversation context follows:
-            """.trimIndent() + context
+            The conversation context follows the colon:\n
+            """.trimIndent() + context.trim()
 
         val request = CompletionRequest(
             model = "gpt-3.5-turbo-instruct", // TODO: add support for multiple models
             prompt = prompt,
-            max_tokens = 50,
-            temperature = 0.5,
-            top_p = 0.9
+            max_tokens = 100,
+            temperature = 0.5
         )
 
         return withContext(Dispatchers.IO) {
@@ -79,6 +77,7 @@ class ChatGPTIntegration {
                 val response = api.getCompletion(request).execute()
                 if (response.isSuccessful) {
                     val completionText = response.body()?.choices?.firstOrNull()?.text ?: ""
+                    Log.e("API_DEBUG", completionText)
                     completionText.trim().split(",")
                 } else {
                     Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
