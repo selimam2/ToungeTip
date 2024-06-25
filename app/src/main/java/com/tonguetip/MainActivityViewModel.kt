@@ -26,21 +26,32 @@ class MainActivityViewModel : ViewModel() {
     fun buttonTest() {
         viewModelScope.launch {
             // TODO: figure out a way to pass the actual context to this
-            val suggestions = chatGPTIntegration.getSuggestions("What's your favourite food?... I like...")
+            val suggestions = chatGPTIntegration.getSuggestions(_uiState.value.liveTextString)
             _uiState.update { currentState ->
                 currentState.copy(
                     isListening = !currentState.isListening,
-                    liveTextString = "Button Pressed",
+                    liveTextString = currentState.liveTextString,
                     suggestions = suggestions
                 )
             }
         }
     }
 
+    fun updateLiveText(str: String){
+        _uiState.update { currentState ->
+            currentState.copy(
+                isListening = currentState.isListening,
+                liveTextString = str,
+                suggestions = currentState.suggestions
+            )
+        }
+    }
+
     fun suggestionReset() {
         _uiState.update { currentState ->
             currentState.copy(
-                suggestions = null
+                suggestions = null,
+                liveTextString = ""
             )
         }
     }

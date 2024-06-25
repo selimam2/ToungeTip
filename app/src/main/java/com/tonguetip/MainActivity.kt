@@ -36,8 +36,12 @@ import com.tonguetip.ui.theme.TongueTipTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 
+var recognizer: VoiceRecognizer? = null;
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        recognizer = VoiceRecognizer(this)
+        recognizer!!.startListening()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -51,6 +55,7 @@ fun MainScreen(
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val suggestions = uiState.suggestions
+    recognizer!!.initUpdateFn(viewModel::updateLiveText)
 
     TongueTipTheme {
         Surface(
@@ -92,7 +97,8 @@ fun MainScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { viewModel.suggestionReset() },
+                        onClick = { viewModel.suggestionReset()
+                            recognizer!!.startListening()},
                         modifier = Modifier
                             .height(60.dp)
                             .fillMaxWidth()
