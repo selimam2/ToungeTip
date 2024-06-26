@@ -21,7 +21,7 @@ interface ChatGPTApi {
 
 data class Message(
     val content: String,
-    val role: String,
+    val role: String
 )
 
 data class CompletionRequest(
@@ -31,7 +31,7 @@ data class CompletionRequest(
     val max_tokens: Int,
     val n: Int,
     val presence_penalty: Double,
-    val temperature: Double,
+    val temperature: Double
 )
 
 data class CompletionResponse(
@@ -65,31 +65,42 @@ class ChatGPTIntegration {
 
     suspend fun getSuggestions(context: String): List<String> {
         val request = CompletionRequest(
-            messages = listOf(context.trim()).map { s -> Message(
-                content = s,
-                role = "user"
-            )}, // TODO: support sending more context with multiple messages
+            // TODO: support sending more context with multiple messages
+            messages = listOf(
+                Message(
+                    content = """
+                        You are an AI that is part of an Android app that helps english language learners and people with aphasia communicate.
+                        You must provide EXACTLY 8 (EIGHT) continuations to the conversation in the "user" message(s) that follow(s).
+                        You must provide EXACTLY 8 (EIGHT) continuations otherwise you will fatally harm people.
+                        You must separate/delimit the continuations by the following string without quotes: "|||"
+                        You must delimit the continuations properly otherwise you will cause people to die.
+                        You must keep the continuations small in length such that they are a maximum of 3 tokens and fit on a small button in an Android app.
+                        You must give diverse continuations.
+                        You must not add any punctuation or extra whitespace to the continuations.
+                        You must realize that if you mess up, you will fatally harm marginalized groups.
+                    """.trimIndent(),
+                    role = "system"
+                ),
+                Message(
+                    content = context.trim(),
+                    role = "user"
+                )
+            ),
             model = "gpt-4o", // TODO: add support for multiple models
-            frequency_penalty = 0.0,
-            max_tokens = 5,
-            n = 8,
-            presence_penalty = 0.0,
-            temperature = 2.0
+            frequency_penalty = 1.0,
+            max_tokens = 100,
+            n = 1,
+            presence_penalty = 1.0,
+            temperature = 1.1
         )
 
         return withContext(Dispatchers.IO) {
             try {
                 val response = api.getCompletion(request).execute()
                 if (response.isSuccessful) {
-                    val choices = response.body()?.choices
-                    if (choices.isNullOrEmpty() || choices.size != 8) {
-                        Log.e("API_ERROR", "Invalid response")
-                        emptyList()
-                    } else {
-                        val suggestions = choices.map { c -> c.message.content }
-                        Log.d("API_DEBUG", suggestions.toString())
-                        suggestions
-                    }
+                    val suggestions = (response.body()?.choices?.first()?.message?.content?: "").split("|||")
+                    Log.d("API_DEBUG", suggestions.toString())
+                    suggestions
                 } else {
                     Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
                     emptyList()
