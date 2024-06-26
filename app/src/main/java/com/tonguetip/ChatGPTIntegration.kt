@@ -15,14 +15,22 @@ import kotlinx.coroutines.withContext
 
 interface ChatGPTApi {
     @Headers("Content-Type: application/json")
-    @POST("v1/completions")
+    @POST("v1/chat/completions")
     fun getCompletion(@Body request: CompletionRequest): Call<CompletionResponse>
 }
 
+data class Message(
+    val content: String,
+    val role: String,
+)
+
 data class CompletionRequest(
+    val messages: List<Message>,
     val model: String,
-    val prompt: String,
+    val frequency_penalty: Double,
     val max_tokens: Int,
+    val n: Int,
+    val presence_penalty: Double,
     val temperature: Double,
 )
 
@@ -31,7 +39,7 @@ data class CompletionResponse(
 )
 
 data class Choice(
-    val text: String
+    val message: Message
 )
 
 class ChatGPTIntegration {
@@ -56,29 +64,32 @@ class ChatGPTIntegration {
     private val api = retrofit.create(ChatGPTApi::class.java)
 
     suspend fun getSuggestions(context: String): List<String> {
-        val prompt =
-            """
-            You help english language learners and people with aphasia communicate.
-            You will be provided with the conversation context to output relevant suggestions that finish the sentence.
-            You must not output anything but a list of 8 comma-separated words.
-            You must not add any extra white space to the output.
-            The conversation context follows the colon:\n
-            """.trimIndent() + context.trim()
-
         val request = CompletionRequest(
-            model = "gpt-3.5-turbo-instruct", // TODO: add support for multiple models
-            prompt = prompt,
-            max_tokens = 100,
-            temperature = 0.5
+            messages = listOf(context.trim()).map { s -> Message(
+                content = s,
+                role = "user"
+            )}, // TODO: support sending more context with multiple messages
+            model = "gpt-4o", // TODO: add support for multiple models
+            frequency_penalty = 0.0,
+            max_tokens = 5,
+            n = 8,
+            presence_penalty = 0.0,
+            temperature = 2.0
         )
 
         return withContext(Dispatchers.IO) {
             try {
                 val response = api.getCompletion(request).execute()
                 if (response.isSuccessful) {
-                    val completionText = response.body()?.choices?.firstOrNull()?.text ?: ""
-                    Log.e("API_DEBUG", completionText)
-                    completionText.trim().split(",")
+                    val choices = response.body()?.choices
+                    if (choices.isNullOrEmpty() || choices.size != 8) {
+                        Log.e("API_ERROR", "Invalid response")
+                        emptyList()
+                    } else {
+                        val suggestions = choices.map { c -> c.message.content }
+                        Log.d("API_DEBUG", suggestions.toString())
+                        suggestions
+                    }
                 } else {
                     Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
                     emptyList()
