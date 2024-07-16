@@ -20,12 +20,18 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String) : Vie
     private val _uiState = MutableStateFlow(DetailedSuggestionState())
     val uiState: StateFlow<DetailedSuggestionState> = _uiState.asStateFlow()
 
+    private val re = Regex("[^A-Za-z ]")
+
+    var suggestions: List<String> = emptyList()
+
     init {
         updateSuggestionDictionary()
     }
     fun updateSuggestionDictionary() {
         viewModelScope.launch {
-            val suggestions = suggestion.split("\\s+".toRegex())
+            val trimmedSuggestion = suggestion.trim()
+            val stripSpecial = re.replace(trimmedSuggestion, "")
+            suggestions = stripSpecial.split("\\s+".toRegex())
             val entries = mutableListOf<DictionaryEntry>()
             for (sug in suggestions){
                 val entry = dictionaryIntegration.getDictionaryEntry(sug) ?: continue
@@ -37,5 +43,9 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String) : Vie
                 )
             }
         }
+    }
+
+    fun hasMultipleWords(): Boolean {
+        return suggestions.size > 1
     }
 }

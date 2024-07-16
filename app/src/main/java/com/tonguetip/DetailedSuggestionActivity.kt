@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.size
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,23 +32,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -68,6 +77,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import java.util.HashMap
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
@@ -105,63 +115,162 @@ fun DisplaySuggestion(suggestion: String, viewModel: DetailedSuggestionActivityV
             contentAlignment = Alignment.Center // Align text to the center horizontally
         )
         {
+            val neatText = suggestion.trim()
             Text(
-                text = "\"$suggestion\"",
+                text = "\"$neatText\"",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleLarge,
             )
         }
+
         if (!dictionaryEntries.isNullOrEmpty())
         {
-            Box(modifier = Modifier
+            Column(modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f))
-            {
-                DisplayDictionaryEntry(dictionaryEntries[0])
+                .weight(1f)) {
+                var expandedEntry by remember { mutableIntStateOf(0) }
+                var visible by remember{mutableStateOf(false)}
+                val showMultiple = viewModel.hasMultipleWords()
+                if(!showMultiple) {
+                    visible = true
+                }
+                else{
+                    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        itemsIndexed(dictionaryEntries) {index, subWordEntry ->
+                            ElevatedButton(
+                                colors = if(expandedEntry == index && visible)
+                                    ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                    else ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.surface),
+                                onClick = {
+                                if(expandedEntry == index)
+                                {
+                                    visible = !visible
+                                }
+                                else{
+                                    visible = true
+                                }
+                                expandedEntry = index
+                            }){
+                                Text(
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = if(expandedEntry == index && visible) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onSurface,
+                                    text = subWordEntry.word
+                                )
+                            }
+
+                        }
+                    }
+                }
+                AnimatedVisibility(visible)
+                {
+                    Column()
+                    {
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                        )
+                        {
+                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry])
+                        }
+                        WordPronunciationCard(dictionaryEntries[expandedEntry].pronunciationURL)
+                    }
+                }
             }
-            WordPronunciationCard(dictionaryEntries[0].pronunciationURL)
+
         }
+        else{
+            Box(contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxWidth().weight(1f)) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .width(64.dp)
+                )
+            }
+
+        }
+        ElevatedCard(
+            elevation = CardDefaults.cardElevation(
+            defaultElevation = 5.dp),modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()) {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                text = "Was this Suggestion Correct?",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp), horizontalArrangement = Arrangement.SpaceEvenly){
+                val context = LocalContext.current
+                ElevatedButton(onClick = {  }, colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Correct Word Icon",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+                OutlinedButton(onClick = {
+                        (context as? ComponentActivity)?.finish()
+                    }, colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.background)) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Incorrect Word Icon"
+                    )
+                }
+
+            }
+        }
+        
 
     }
 }
 @OptIn(ExperimentalFoundationApi::class)
 @Composable fun DisplayDictionaryEntry(entry: DictionaryEntry){
     Column(){
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.CenterStart // Align text to the center horizontally
-        )
-        {
+        ElevatedCard(
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 5.dp),modifier = Modifier
+                .padding(5.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(6.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary,)) {
             Text(
                 text = "Definitions:",
                 textAlign = TextAlign.Left,
                 style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.padding(8.dp)
             )
         }
-        LazyColumn {
-            entry.meanings!!.forEach { (partOfSpeech, definitionsForPartOfSpeech) ->
-                stickyHeader {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
-                    )
-                    {
-                        Text(
-                            text = "${partOfSpeech.value}:",
-                            textAlign = TextAlign.Left,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(10.dp)
+        OutlinedCard(modifier = Modifier.padding(5.dp)){
+            LazyColumn {
+                entry.meanings!!.forEach { (partOfSpeech, definitionsForPartOfSpeech) ->
+                    stickyHeader {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(3.dp)
                         )
+                        {
+                            Text(
+                                text = "${partOfSpeech.value}:",
+                                textAlign = TextAlign.Left,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
                     }
-                }
 
-                itemsIndexed(definitionsForPartOfSpeech) { index, definition ->
-                    DefinitionCard(index,definition.definition,definition.example,definition.synonyms,definition.antonyms)
-                    if(index != definitionsForPartOfSpeech.count()-1)
-                    Spacer(Modifier.size(10.dp))
+                    itemsIndexed(definitionsForPartOfSpeech) { index, definition ->
+                        DefinitionCard(index,definition.definition,definition.example,definition.synonyms,definition.antonyms)
+                        if(index != definitionsForPartOfSpeech.count()-1)
+                            Spacer(Modifier.size(3.dp))
+                    }
                 }
             }
         }
@@ -176,8 +285,13 @@ fun DefinitionCard(index: Int, definition: String, example: String ?= null, syno
     val rotationState by animateFloatAsState(
         targetValue = if (expandedState) 0f else -90f
     )
-    OutlinedCard(
+    ElevatedCard(
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 3.dp
+        ),
+        shape = RoundedCornerShape(6.dp),
         modifier = Modifier
+            .padding(10.dp)
             .fillMaxWidth()
             .animateContentSize(
                 animationSpec = tween(
@@ -269,21 +383,24 @@ fun WordPronunciationCard(url: String?){
     ElevatedCard(elevation = CardDefaults.cardElevation(
         defaultElevation = 5.dp),
         onClick = {
-            val mediaPlayer = MediaPlayer()
-            mediaPlayer.setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
+            if(url != null)
+            {
+                val mediaPlayer = MediaPlayer()
+                mediaPlayer.setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
 
-            try {
-                mediaPlayer.setDataSource(context, Uri.parse(url))
-                mediaPlayer.prepareAsync()
-                mediaPlayer.setOnPreparedListener { mp ->
-                    mp.start()
+                try {
+                    mediaPlayer.setDataSource(context, Uri.parse(url))
+                    mediaPlayer.prepareAsync()
+                    mediaPlayer.setOnPreparedListener { mp ->
+                        mp.start()
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
             }
         },
         modifier = Modifier
