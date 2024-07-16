@@ -12,9 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-        primary = Purple80,
-        secondary = PurpleGrey80,
-        tertiary = Pink80
+        primary = Purple200,
+        secondary = Teal200,
+        surface = PurpleGrey80,
+        background = Black,
+        onPrimary = Black,
+        onSecondary = Black,
+        onBackground = White,
+        onSurface = White,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -41,13 +46,8 @@ fun TongueTipTheme(
         content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorScheme()
+        else -> lightColorScheme()
     }
 
     MaterialTheme(

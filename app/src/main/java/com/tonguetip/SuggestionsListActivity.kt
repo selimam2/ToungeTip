@@ -128,27 +128,6 @@ fun SuggestionsListScreen() {
     }
 }
 
-@Composable
-fun SuggestionBox(text: String) {
-    Box(
-        modifier = Modifier
-            .width(150.dp)
-            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(8.dp))
-            .height(80.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = text, color = Color(0xFF000000), fontSize = 16.sp)
-    }
-}
-
-@Composable
-fun SuggestionBoxPlaceholder() {
-    Box(
-        modifier = Modifier
-            .padding(5.dp)
-    )
-}
-
 fun getSuggestions(): List<String> {
     // Replace this with your logic to get suggestions
     return listOf("Fries", "Pasta", "Salad", "Tacos", "Sushi", "Pizza", "Beans", "Burgers")

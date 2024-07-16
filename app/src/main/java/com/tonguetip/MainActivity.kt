@@ -7,6 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.size
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +18,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonguetip.ui.theme.TongueTipTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
 
 var recognizer: VoiceRecognizer? = null;
 
@@ -167,4 +172,31 @@ fun ListeningStatus(modifier: Modifier = Modifier) {
         Text(text = "Listening ...",
             color = Color.Red)
     }
+}
+
+@Composable
+fun SuggestionBox(text: String) {
+    val context = LocalContext.current
+    Box(
+        modifier = Modifier
+            .width(150.dp)
+            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(8.dp))
+            .height(80.dp)
+            .clickable(onClick = {
+                var intent = Intent(context,DetailedSuggestionActivity::class.java)
+                intent.putExtra("suggestion", text)
+                context.startActivity(intent)
+            }),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = text, color = Color(0xFF000000), fontSize = 16.sp)
+    }
+}
+
+@Composable
+fun SuggestionBoxPlaceholder() {
+    Box(
+        modifier = Modifier
+            .padding(5.dp)
+    )
 }
