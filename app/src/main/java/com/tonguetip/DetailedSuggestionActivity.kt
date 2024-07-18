@@ -87,20 +87,28 @@ class DetailedSuggestionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var suggestion = intent.getStringExtra("suggestion")
+        var suggestionContext = intent.getStringExtra("suggestionContext")
         setContent{
             TongueTipTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     if(suggestion != null){
-                        DisplaySuggestion(suggestion)
+                        if (suggestionContext != null) {
+                            DisplaySuggestion(suggestion, suggestionContext)
+                        }
                     }
                 }
             }
         }
     }
+
+    override fun onDestroy() {
+        DatabaseHandler.closeDatabase()
+        super.onDestroy()
+    }
 }
 
 @Composable
-fun DisplaySuggestion(suggestion: String, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion)}) {
+fun DisplaySuggestion(suggestion: String, suggestionContext: String, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion)}) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val dictionaryEntries = uiState.words
     Column(
@@ -206,7 +214,10 @@ fun DisplaySuggestion(suggestion: String, viewModel: DetailedSuggestionActivityV
                 .fillMaxWidth()
                 .padding(5.dp), horizontalArrangement = Arrangement.SpaceEvenly){
                 val context = LocalContext.current
-                ElevatedButton(onClick = {  }, colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                ElevatedButton(onClick = {
+                    viewModel.insertSuggestionToDatabase(suggestion,suggestionContext)
+                    (context as? ComponentActivity)?.finish()},
+                    colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Correct Word Icon",
@@ -433,6 +444,6 @@ fun WordPronunciationCard(url: String?){
 @Composable
 fun DisplaySuggestionPreview() {
     Surface(color = MaterialTheme.colorScheme.background) {
-        DisplaySuggestion("Hello")
+        DisplaySuggestion("Hello", "Hello, my name jeff")
     }
 }

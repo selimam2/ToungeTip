@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 data class DetailedSuggestionState(
     val words: List<DictionaryEntry>? = null,
@@ -47,5 +48,11 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String) : Vie
 
     fun hasMultipleWords(): Boolean {
         return suggestions.size > 1
+    }
+
+    fun insertSuggestionToDatabase(suggestion: String, contextString: String){
+        viewModelScope.launch{
+            DatabaseHandler.addSuggestion(suggestion, SuggestionContext(contextString, LocalDate.now()))
+        }
     }
 }

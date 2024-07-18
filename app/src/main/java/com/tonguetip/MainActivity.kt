@@ -175,7 +175,8 @@ fun ListeningStatus(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SuggestionBox(text: String) {
+fun SuggestionBox(text: String, viewModel: MainActivityViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -185,6 +186,7 @@ fun SuggestionBox(text: String) {
             .clickable(onClick = {
                 var intent = Intent(context,DetailedSuggestionActivity::class.java)
                 intent.putExtra("suggestion", text)
+                intent.putExtra("suggestionContext", uiState.liveTextString)
                 context.startActivity(intent)
             }),
         contentAlignment = Alignment.Center
