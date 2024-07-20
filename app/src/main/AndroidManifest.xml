@@ -44,6 +44,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".UserMetricsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".SuggestionsListActivity" android:exported="true"/>
 
     </application>

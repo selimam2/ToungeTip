@@ -33,13 +33,13 @@ object SuggestionHistoryContract {
 class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         // Constant values for database handler
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 3
         const val DATABASE_NAME = "SuggestionHistory.db"
 
         private const val SQL_CREATE_ENTRIES =
             "CREATE TABLE IF NOT EXISTS ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} (" +
-                "${BaseColumns._ID} INTEGER ," +
-                "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME} TEXT PRIMARY KEY," +
+                "${BaseColumns._ID} INTEGER PRIMARY KEY," +
+                "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME} TEXT UNIQUE," +
                 "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_OCCURRENCES} INTEGER DEFAULT 0)"
 
         private const val SQL_CREATE_CONTEXTS =
@@ -93,6 +93,61 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             return itemID
         }
 
+        fun getTotalSuggestionsUsed(): Int{
+            if(!::DATABASE.isInitialized || !DATABASE.isOpen){
+                DATABASE = DBINSTANCE.writableDatabase
+            }
+
+            val QUERY = "SELECT SUM(${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_OCCURRENCES}) AS totSum " +
+                    "FROM ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME}"
+
+            val cursor = DATABASE.rawQuery(QUERY, null)
+
+            var dbSum = 0
+            with(cursor) {
+                if (moveToNext()) {
+                    dbSum = getInt(getColumnIndexOrThrow("totSum"))
+                }
+            }
+            cursor.close()
+
+            return dbSum
+        }
+
+        fun getNLeastRecentSuggestions(numSuggestions: Long? = null): List<Pair<String,LocalDate>>{
+            if(!::DATABASE.isInitialized || !DATABASE.isOpen){
+                DATABASE = DBINSTANCE.writableDatabase
+            }
+
+            var QUERY = "SELECT ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME}," +
+                    "MIN(${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE}) AS leastRecent FROM " +
+                    "${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} JOIN ${SuggestionHistoryContract.SuggestionContextsEntry.TABLE_NAME} " +
+                    "ON ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME}.${BaseColumns._ID} = ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} " +
+                    "GROUP BY ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} " +
+                    "ORDER BY leastRecent DESC"
+
+            if(numSuggestions != null)
+            {
+                QUERY += " LIMIT $numSuggestions"
+            }
+
+            val cursor = DATABASE.rawQuery(QUERY, null)
+
+            val suggestionList = mutableListOf<Pair<String,LocalDate>>()
+            with(cursor) {
+                while (moveToNext()) {
+                    val pair = Pair<String,LocalDate>(
+                        getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME)),
+                        LocalDate.parse(
+                            getString(getColumnIndexOrThrow("leastRecent")),
+                            DateTimeFormatter.BASIC_ISO_DATE))
+                    suggestionList.add(pair)
+                }
+            }
+            cursor.close()
+            return suggestionList
+        }
+
         fun getNMostRecentSuggestions(numSuggestions: Long? = null): List<Pair<String,LocalDate>>{
             if(!::DATABASE.isInitialized || !DATABASE.isOpen){
                 DATABASE = DBINSTANCE.writableDatabase
@@ -118,7 +173,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                     val pair = Pair<String,LocalDate>(
                         getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME)),
                         LocalDate.parse(
-                            getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE)),
+                            getString(getColumnIndexOrThrow("mostRecent")),
                             DateTimeFormatter.BASIC_ISO_DATE))
                     suggestionList.add(pair)
                 }
@@ -217,24 +272,29 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                 DATABASE = DBINSTANCE.writableDatabase
             }
 
+            val trimmedSuggestion = suggestion.trim()
+            val cleanSuggestion = Regex("\\s+").replace( trimmedSuggestion, " ")
+
+            val trimmedSuggestionContext = suggestionContext.contextString.trim()
+            val cleanSuggestionContext = Regex("\\s+").replace( trimmedSuggestionContext, " ")
 
             try {
                 DATABASE.beginTransaction()
                 val ADD_OR_UPDATE_SUGGESTION = "INSERT INTO ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} (" +
                         "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME}, " +
                         "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_OCCURRENCES}) " +
-                        "VALUES ('${suggestion}', 1) " +
+                        "VALUES ('${cleanSuggestion}', 1) " +
                         "ON CONFLICT(${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME}) " +
                         "DO UPDATE SET ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_OCCURRENCES} = " +
                         "${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_OCCURRENCES} + 1"
 
                 DATABASE.execSQL(ADD_OR_UPDATE_SUGGESTION)
 
-                val itemID = getIDofWord(suggestion)
+                val itemID = getIDofWord(cleanSuggestion)
 
                 val values = ContentValues().apply {
                     put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY, itemID)
-                    put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE, suggestionContext.contextString)
+                    put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE, cleanSuggestionContext)
                     put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE, suggestionContext.dateSuggested.format(
                         DateTimeFormatter.BASIC_ISO_DATE))
                 }
