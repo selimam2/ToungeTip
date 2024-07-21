@@ -102,8 +102,10 @@ fun ShowSettings(sharedPreferences: SharedPreferences){
             contentAlignment = Alignment.Center // Align text to the center horizontally
         )
         {
-            Column {//listOf(Pair("Gemma","Gemma (Offline)"), Pair("ChatGPT","ChatGPT (Online)"))
-                SettingsCardDropdown("LLMOption", mapOf("Gemma" to "Gemma (Offline)", "ChatGPT" to "ChatGPT (Online)"),sharedPreferences)
+            Column {
+                // First in map is the default, maps from the option name to the human readable name
+                // Name refers to the setting name, which you can use getString(name,default_value) to get
+                SettingsCardDropdown("LLMOption", mapOf("ChatGPT" to "ChatGPT (Online)", "Gemma" to "Gemma (Offline)"),sharedPreferences)
                 SettingsCardDropdown("NativeLanguage", mapOf("English" to "English (Eng)", "French" to "French (Fr)",
                     "Russian" to "Russian (Ru)"),sharedPreferences)
             }
