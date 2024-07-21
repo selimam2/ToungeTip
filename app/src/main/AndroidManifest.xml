@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".TongueTipApplication"
@@ -27,7 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -35,7 +35,6 @@
                 <action android:name="android.intent.action.DEFAULT" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".SettingsActivity"
             android:exported="true">
@@ -51,7 +50,6 @@
                 <action android:name="android.intent.action.DEFAULT" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".UserMetricsActivity"
             android:exported="true">
@@ -59,9 +57,9 @@
                 <action android:name="android.intent.action.DEFAULT" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".SuggestionsListActivity" android:exported="true"/>
-
+        <activity
+            android:name=".SuggestionsListActivity"
+            android:exported="true" />
     </application>
 
 </manifest>
