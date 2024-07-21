@@ -37,6 +37,14 @@
         </activity>
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".DetailedSuggestionActivity"
             android:exported="true">
             <intent-filter>
