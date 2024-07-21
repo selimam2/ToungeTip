@@ -27,9 +27,9 @@ class MainActivityViewModel : ViewModel() {
 
     fun buttonTest(ctx : android.content.Context) {
         viewModelScope.launch {
+            val gemma = GemmaIntegration(ctx)
 
-
-            val suggestions = chatGPTIntegration.getSuggestions(_uiState.value.liveTextString)
+            val suggestions = gemma.getSuggestions(_uiState.value.liveTextString)
             _uiState.update { currentState ->
                 currentState.copy(
                     isListening = !currentState.isListening,

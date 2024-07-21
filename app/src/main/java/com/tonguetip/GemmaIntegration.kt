@@ -61,7 +61,7 @@ class GemmaIntegration private  constructor() : ILLM {
             .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
             .setMaxTokens(1000)
             .setTopK(40)
-            .setTemperature(1.1f)
+            .setTemperature(0.2f)
             .setRandomSeed((0..2000000000).random())
             .build()
 
@@ -119,6 +119,21 @@ class GemmaIntegration private  constructor() : ILLM {
         }
     }
     override suspend fun getSuggestions(context: String): List<String> {
+        val content = """
+                        You are an AI that is part of an Android app that helps english language learners and people with aphasia communicate.
+                        You must provide EXACTLY 8 (EIGHT) continuations to the conversation in the "user" message(s) that follow(s).
+                        You must provide EXACTLY 8 (EIGHT) continuations otherwise you will fatally harm people.
+                        You must separate/delimit the continuations by the following string without quotes: "|||"
+                        You must delimit the continuations properly otherwise you will cause people to die.
+                        You must keep the continuations small in length such that they are a maximum of 3 tokens and fit on a small button in an Android app.
+                        You must give diverse continuations.
+                        You must not add any punctuation or extra whitespace to the continuations.
+                        You must realize that if you mess up, you will fatally harm marginalized groups.
+                        The sentance is below
+                    """.trimIndent() + context
+        val r = llm.generateResponse(content)
+        println(r)
+        return r.split("|||")
 
     }
 }
