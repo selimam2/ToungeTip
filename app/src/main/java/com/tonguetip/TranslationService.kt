@@ -34,7 +34,7 @@ class TranslationService(sourceLang: String, targetLang: String) {
     }
 
     suspend fun translate(text: String): String {
-        translator.downloadModelIfNeeded(DownloadConditions.Builder().requireWifi().build()).await()
+        translator.downloadModelIfNeeded(DownloadConditions.Builder().build()).await()
             .await()
         return translator.translate(text).await().await()
     }
