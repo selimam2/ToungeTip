@@ -26,7 +26,7 @@ fun <T> Task<T>.await(): Deferred<T> {
 }
 
 class TranslationService(sourceLang: String, targetLang: String) {
-    private lateinit var translator: Translator
+    private var translator: Translator
 
     init {
         val options =
@@ -35,9 +35,13 @@ class TranslationService(sourceLang: String, targetLang: String) {
         translator = Translation.getClient(options)
     }
 
-    suspend fun translateText(text: String): String {
+    suspend fun translate(text: String): String {
         translator.downloadModelIfNeeded(DownloadConditions.Builder().requireWifi().build()).await()
             .await()
         return translator.translate(text).await().await()
+    }
+
+    fun close() {
+        translator.close()
     }
 }
