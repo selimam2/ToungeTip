@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.google.mlkit.nl.translate.TranslateLanguage
 import com.tonguetip.ui.theme.TongueTipTheme
 
 class SettingsActivity : ComponentActivity() {
@@ -61,7 +62,7 @@ class SettingsActivity : ComponentActivity() {
         setContent {
 
             val context = LocalContext.current
-            val sharedPreference =  this.getPreferences(Context.MODE_PRIVATE)
+            val sharedPreference =  this.getSharedPreferences("TONGUETIP_SETTINGS",Context.MODE_PRIVATE)
 
             TongueTipTheme {
                 Surface(
@@ -106,8 +107,8 @@ fun ShowSettings(sharedPreferences: SharedPreferences){
                 // First in map is the default, maps from the option name to the human readable name
                 // Name refers to the setting name, which you can use getString(name,default_value) to get
                 SettingsCardDropdown("LLMOption", mapOf("ChatGPT" to "ChatGPT (Online)", "Gemma" to "Gemma (Offline)"),sharedPreferences)
-                SettingsCardDropdown("NativeLanguage", mapOf("English" to "English (Eng)", "French" to "French (Fr)",
-                    "Russian" to "Russian (Ru)"),sharedPreferences)
+                SettingsCardDropdown("NativeLanguage", mapOf(TranslateLanguage.ENGLISH to "English (Eng)", TranslateLanguage.FRENCH to "French (Fr)",
+                    TranslateLanguage.RUSSIAN to "Russian (Ru)"),sharedPreferences)
             }
         }
 
@@ -118,7 +119,7 @@ fun ShowSettings(sharedPreferences: SharedPreferences){
 @Composable
 fun SettingsCardDropdown(name:String,settingsOptions: Map<String,String>, sharedPreferences: SharedPreferences){
     var expandedState by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf(settingsOptions[sharedPreferences.getString(name,settingsOptions.keys.elementAt(0))]) }
+    var selectedText by remember { mutableStateOf(settingsOptions[sharedPreferences.getString(name,settingsOptions.keys.elementAt(0)) ?: settingsOptions.keys.elementAt(0)]) }
     ElevatedCard(
         modifier = Modifier
             .padding(20.dp)

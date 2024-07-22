@@ -42,6 +42,8 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Check
@@ -55,6 +57,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -81,6 +84,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import com.google.mlkit.nl.translate.TranslateLanguage
 import java.io.IOException
 
 class DetailedSuggestionActivity : ComponentActivity() {
@@ -88,12 +92,20 @@ class DetailedSuggestionActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var suggestion = intent.getStringExtra("suggestion")
         var suggestionContext = intent.getStringExtra("suggestionContext")
+        val sharedPreference =  this.getSharedPreferences("TONGUETIP_SETTINGS",Context.MODE_PRIVATE)
+        val nativeLang = sharedPreference.getString("NativeLanguage", TranslateLanguage.ENGLISH)
         setContent{
             TongueTipTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     if(suggestion != null){
                         if (suggestionContext != null) {
-                            DisplaySuggestion(suggestion, suggestionContext)
+                            if(nativeLang != null){
+                                DisplaySuggestion(suggestion, suggestionContext, nativeLang)
+                            }
+                            else{
+                                DisplaySuggestion(suggestion, suggestionContext)
+                            }
+
                         }
                     }
                 }
@@ -108,9 +120,10 @@ class DetailedSuggestionActivity : ComponentActivity() {
 }
 
 @Composable
-fun DisplaySuggestion(suggestion: String, suggestionContext: String, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion)}) {
+fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: String = TranslateLanguage.ENGLISH, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion,nativeLang)}) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val dictionaryEntries = uiState.words
+    val translations = uiState.translations
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,7 +143,6 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String, viewModel: 
                 style = MaterialTheme.typography.titleLarge,
             )
         }
-
         if (!dictionaryEntries.isNullOrEmpty())
         {
             Column(modifier = Modifier
@@ -179,7 +191,8 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String, viewModel: 
                             .weight(1f)
                         )
                         {
-                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry])
+                            val translation = translations?.get(dictionaryEntries[expandedEntry].word)
+                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], nativeLang != TranslateLanguage.ENGLISH, translation)
                         }
                         WordPronunciationCard(dictionaryEntries[expandedEntry].pronunciationURL)
                     }
@@ -240,8 +253,46 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String, viewModel: 
     }
 }
 @OptIn(ExperimentalFoundationApi::class)
-@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry){
+@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry,showTranslation: Boolean = false, translation:String?= null){
     Column(){
+        if(showTranslation){
+            if(translation != null){
+                Box(
+                    modifier = Modifier
+                        .padding(3.dp).fillMaxWidth(),
+                    contentAlignment = Alignment.Center // Align text to the center horizontally
+                ){
+                    ElevatedCard(
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary,)) {
+                        Row(modifier = Modifier.padding(5.dp)){
+                            Text(
+                                text = "\"$translation\"",
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Dropdown arrow"
+                            )
+                        }
+                    }
+                }
+
+            }
+            else{
+                Box(contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .height(5.dp)
+                    )
+                }
+            }
+        }
         ElevatedCard(
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 5.dp),modifier = Modifier
@@ -438,12 +489,5 @@ fun WordPronunciationCard(url: String?){
                     .alpha(1f),
             )
         }
-    }
-}
-@Preview
-@Composable
-fun DisplaySuggestionPreview() {
-    Surface(color = MaterialTheme.colorScheme.background) {
-        DisplaySuggestion("Hello", "Hello, my name jeff")
     }
 }
