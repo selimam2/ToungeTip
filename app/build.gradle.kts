@@ -58,6 +58,9 @@ dependencies {
     //implementation(libs.androidx.material3)
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation(libs.androidx.lifecycle.runtime.compose.android)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.preference)
+    implementation(libs.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,4 +77,11 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.google.code.gson:gson:2.10.1")
+	// Add Mediapipe
+    implementation ("com.google.mediapipe:tasks-genai:0.10.14")
+    implementation("org.apache.commons:commons-compress:1.26.2")
+
+    // Add ML Kit for translation featur
+    implementation("com.google.mlkit:translate:17.0.2")
+
 }
