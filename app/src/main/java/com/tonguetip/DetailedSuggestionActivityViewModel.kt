@@ -40,6 +40,7 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String, nativ
             updateTranslation()
         }
     }
+
     private fun updateTranslation(){
         viewModelScope.launch {
             if (translationIntegration != null) {
@@ -53,6 +54,8 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String, nativ
                         translations = translations
                     )
                 }
+                translationIntegration?.close()
+                translationIntegration = null
             }
         }
     }
