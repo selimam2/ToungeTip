@@ -1,11 +1,9 @@
 package com.tonguetip
 
-import android.content.Context
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.common.model.DownloadConditions
-import android.util.Log
 
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.CompletableDeferred
