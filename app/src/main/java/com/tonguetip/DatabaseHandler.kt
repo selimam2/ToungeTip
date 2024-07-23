@@ -397,7 +397,6 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             addSuggestion("dog",SuggestionContext("I'm thinking of adopting a", LocalDate.now().minusDays(10)))
             addSuggestion("abroad",SuggestionContext("Have you ever traveled", LocalDate.now().minusDays(15)))
             addSuggestion("dinner",SuggestionContext("What did you eat for", LocalDate.now().minusDays(14)))
-            addSuggestion("do",SuggestionContext("What would you like to", LocalDate.now().minusDays(4)))
             addSuggestion("baseball",SuggestionContext("My favourite sport is", LocalDate.now().minusDays(7)))
             addSuggestion("weekend",SuggestionContext("What would you like to do this", LocalDate.now().minusDays(13)))
         }

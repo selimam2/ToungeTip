@@ -20,7 +20,8 @@ data class QuizState(
     val forgottenSentences: LinkedHashMap<String,String>? = null,
     val translatedWords: LinkedHashMap<String,String>? = null,
     val questions: MutableList<Question>? = null,
-    val score: Int = 0
+    val score: Int = 0,
+    val index: Int = 0
 )
 
 data class Question(
@@ -96,11 +97,11 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
                 if (index in forgottenWords.indices) {
                     val word = forgottenWords[index]
                     val entry = dictionaryIntegration.getDictionaryEntry(word) ?: continue
-                    val firstEntry: Map.Entry<PartOfSpeech, List<Definition>>? = entry.meanings?.entries?.firstOrNull()
+                    val ans = entry.mainDefinition?.definition
                     val question = Question(
                         questionType = QuestionTypes.DEFINE_WORD,
                         header = word,
-                        answer = firstEntry?.value?.firstOrNull()?.definition
+                        answer = ans
                     )
                     questionList.add(question)
                 }
@@ -151,9 +152,29 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             // Update state with new current question
             _uiState.update { currentState ->
                 currentState.copy(
-                    score = currentScore
+                    score = currentScore,
+                    index = currentQuestionIndex
                 )
             }
         }
+    }
+
+    suspend fun generateOptionsForDefinition(answer: String, list: List<String>): List<String> {
+        val options = mutableListOf<String>()
+        for (item in list) {
+            if (item == answer) continue // Skip the correct answer
+            val entry = dictionaryIntegration.getDictionaryEntry(item) ?: continue
+            val ans = entry.mainDefinition?.definition ?: continue
+
+            options.add(ans)
+        }
+
+        if (!options.contains(answer)) {
+            options.add(answer)
+        }
+
+        options.shuffle()
+
+        return options
     }
 }
