@@ -16,9 +16,9 @@ enum class QuestionTypes {
 }
 
 data class QuizState(
-    val forgottenWords: List<String>? = null,
-    val forgottenSentences: LinkedHashMap<String,String>? = null,
-    val translatedWords: LinkedHashMap<String,String>? = null,
+    val forgottenWords: List<StringContext>? = null,
+    val forgottenSentences: LinkedHashMap<StringContext, String>? = null,
+    val translatedWords: LinkedHashMap<StringContext, String>? = null,
     val questions: MutableList<Question>? = null,
     val score: Int = 0,
     val index: Int = 0
@@ -27,7 +27,13 @@ data class QuizState(
 data class Question(
     val questionType: QuestionTypes,
     val header: String,
-    val answer: String?
+    val answer: String?,
+    val partOfSpeech: PartOfSpeech
+)
+
+data class StringContext(
+    val string: String,
+    val partOfSpeech: PartOfSpeech
 )
 
 class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
@@ -52,23 +58,37 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             // 5 translation words (if needed)
             var forgottenWordsList = DatabaseHandler.getNPastSuggestions(15)
             forgottenWordsList = forgottenWordsList.shuffled()
-            val sentenceList = linkedMapOf<String,String>()
+            var contextWordList = mutableListOf<StringContext>()
+            for (word in forgottenWordsList) {
+                val context = DatabaseHandler.getContextForSuggestion(word)
+                val wordContext = StringContext(
+                    string = word,
+                    partOfSpeech = context[0].partOfSpeech
+                )
+                contextWordList.add(wordContext)
+            }
+
+            val sentenceList = linkedMapOf<StringContext,String>()
             // Indices 5-9 for sentences
             for (index in 5..9) {
                 if (index in forgottenWordsList.indices) {
                     val forgottenSentence = DatabaseHandler.getContextForSuggestion(forgottenWordsList[index], 1)
-                    sentenceList[forgottenSentence[0].contextString] = forgottenWordsList[index]
+                    val sentence = StringContext(
+                        string = forgottenSentence[0].contextString,
+                        partOfSpeech = forgottenSentence[0].partOfSpeech
+                    )
+                    sentenceList[sentence] = forgottenWordsList[index]
                 }
             }
 
             // Indices 10-14 for translation
-            val translations = linkedMapOf<String,String>()
+            val translations = linkedMapOf<StringContext,String>()
             if (language != TranslateLanguage.ENGLISH) {
                 if (translationIntegration != null) {
                     for (index in 10..14) {
-                        if (index in forgottenWordsList.indices) {
-                            val word = forgottenWordsList[index]
-                            val translation = translationIntegration!!.translate(word)
+                        if (index in contextWordList.indices) {
+                            val word = contextWordList[index]
+                            val translation = translationIntegration!!.translate(word.string)
                             translations[word] = translation
                         }
                     }
@@ -77,11 +97,11 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
                 }
             }
 
-            val questionsList = generateQuestions(forgottenWordsList, sentenceList, translations)
+            val questionsList = generateQuestions(contextWordList, sentenceList, translations)
 
             _uiState.update { currentState ->
                 currentState.copy(
-                    forgottenWords = forgottenWordsList,
+                    forgottenWords = contextWordList,
                     forgottenSentences = sentenceList,
                     translatedWords = translations,
                     questions = questionsList
@@ -90,18 +110,19 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
         }
     }
 
-    private suspend fun generateQuestions(forgottenWords: List<String>?, forgottenSentences: LinkedHashMap<String, String>?, translatedWords: LinkedHashMap<String, String>?): MutableList<Question> {
+    private suspend fun generateQuestions(forgottenWords: MutableList<StringContext>, forgottenSentences: LinkedHashMap<StringContext, String>?, translatedWords: LinkedHashMap<StringContext, String>): MutableList<Question> {
         val questionList = mutableListOf<Question>()
         if (forgottenWords != null) {
             for (index in 0..4) {
                 if (index in forgottenWords.indices) {
                     val word = forgottenWords[index]
-                    val entry = dictionaryIntegration.getDictionaryEntry(word) ?: continue
+                    val entry = dictionaryIntegration.getDictionaryEntry(word.string) ?: continue
                     val ans = entry.mainDefinition?.definition
                     val question = Question(
                         questionType = QuestionTypes.DEFINE_WORD,
-                        header = word,
-                        answer = ans
+                        header = word.string,
+                        answer = ans,
+                        partOfSpeech = word.partOfSpeech
                     )
                     questionList.add(question)
                 }
@@ -111,8 +132,9 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             for ((key, value) in forgottenSentences) {
                 val question = Question(
                     questionType = QuestionTypes.FINISH_SENTENCE,
-                    header = key,
-                    answer = value
+                    header = key.string,
+                    answer = value,
+                    partOfSpeech = key.partOfSpeech
                 )
                 questionList.add(question)
             }
@@ -123,7 +145,8 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
                 val question = Question(
                     questionType = QuestionTypes.NATIVE_TRANSLATION,
                     header = value,
-                    answer = key
+                    answer = key.string,
+                    partOfSpeech = key.partOfSpeech
                 )
                 questionList.add(question)
             }

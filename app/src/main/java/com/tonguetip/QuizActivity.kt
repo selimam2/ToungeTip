@@ -110,28 +110,30 @@ fun QuizScreen(
 }
 
 @Composable
-fun QuestionView(question: Question, forgottenWords: List<String>?, viewModel: QuizActivityViewModel, onAnswerSelected: (String) -> Unit) {
+fun QuestionView(question: Question, forgottenWords: List<StringContext>?, viewModel: QuizActivityViewModel, onAnswerSelected: (String) -> Unit) {
     // State to hold the options
     val options = remember { mutableStateOf<List<String>>(emptyList()) }
     val isLoading = remember { mutableStateOf(true) } // State to track loading
 
-    var ans = question.answer
+    var ans = StringContext(
+        string = question.answer!!,
+        partOfSpeech = question.partOfSpeech
+    )
     if (question.questionType == QuestionTypes.DEFINE_WORD) {
-        ans = question.header
+        ans = StringContext(
+            string = question.header,
+            partOfSpeech = question.partOfSpeech
+        )
     }
-    val initialOptions = generateOptions(ans ?: "", forgottenWords)
+    val initialOptions = generateOptions(ans, forgottenWords)
 
     // Set initial options and start loading
     LaunchedEffect(question, forgottenWords) {
         if (question.questionType == QuestionTypes.DEFINE_WORD) {
-            if (question.answer != null) {
-                options.value = viewModel.generateOptionsForDefinition(
-                    answer = question.answer,
-                    list = initialOptions
-                )
-            } else {
-                options.value = initialOptions
-            }
+            options.value = viewModel.generateOptionsForDefinition(
+                answer = question.answer,
+                list = initialOptions
+            )
         } else {
             options.value = initialOptions
         }
@@ -208,11 +210,11 @@ fun AnswerTile(answer: String, onClick: (String) -> Unit) {
     }
 }
 
-fun generateOptions(correctAnswer: String, forgottenWords: List<String>?): List<String> {
-    val options = mutableSetOf(correctAnswer)
+fun generateOptions(correctAnswer: StringContext, forgottenWords: List<StringContext>?): List<String> {
+    val options = mutableSetOf(correctAnswer.string)
 
     // Ensure forgottenWords is not null and filter out the correct answer
-    val wordsList = forgottenWords?.filter { it != correctAnswer } ?: emptyList()
+    val wordsList = forgottenWords?.filter { it.string != correctAnswer.string || it.partOfSpeech != correctAnswer.partOfSpeech } ?: emptyList()
 
     // Randomly select 3 words from the list, if there are enough words
     val additionalOptions = if (wordsList.size >= 3) {
@@ -221,7 +223,7 @@ fun generateOptions(correctAnswer: String, forgottenWords: List<String>?): List<
         wordsList // If less than 3, take as many as available
     }
 
-    options.addAll(additionalOptions)
+    options.addAll(additionalOptions.map { it.string })
 
     // Convert to list and shuffle
     return options.toList().shuffled()
