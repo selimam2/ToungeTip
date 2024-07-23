@@ -67,18 +67,55 @@ fun HamburgerMenu(context: Context, title:String = "", modifier: Modifier = Modi
             Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = androidx.compose.ui.Modifier.size(40.dp))
 
-                Button(modifier = Modifier.padding(5.dp),shape = CircleShape, contentPadding = PaddingValues(0.dp), onClick = {context.startActivity(Intent(context, SettingsActivity::class.java)) }
+                Button(modifier = Modifier.padding(5.dp),shape = CircleShape, contentPadding = PaddingValues(0.dp), onClick = {
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(intent)
+                    scope.launch {
+                        drawerState.apply {
+                            close()
+                        }
+                    }
+
+                }
                 , colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)) {
                     Icon(Icons.Filled.Settings, contentDescription = "",tint = MaterialTheme.colorScheme.onTertiary)
                 }
                 HorizontalDivider(thickness = 3.dp, modifier = Modifier.width(100.dp))
-                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, LaunchedActivity::class.java)) }) {
+                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {
+                    val intent = Intent(context, LaunchedActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(intent)
+                    scope.launch {
+                        drawerState.apply {
+                            close()
+                        }
+                    }
+                }) {
                     Text(text = "Home")
                 }
-                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, QuizActivity::class.java)) }) {
+                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {
+                    val intent = Intent(context, QuizActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(intent)
+                    scope.launch {
+                        drawerState.apply {
+                            close()
+                        }
+                    }
+                }) {
                     Text(text = "Quiz")
                 }
-                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, UserMetricsActivity::class.java)) }) {
+                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {
+                    val intent = Intent(context, UserMetricsActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(intent)
+                    scope.launch {
+                        drawerState.apply {
+                            close()
+                        }
+                    }
+                }) {
                     Text(text = "Metrics")
                 }
             }
