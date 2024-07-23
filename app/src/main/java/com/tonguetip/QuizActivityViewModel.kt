@@ -33,6 +33,8 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
     val uiState: StateFlow<QuizState> = _uiState.asStateFlow()
     private var translationIntegration:TranslationService? = null
     private var language: String = ""
+    private var currentQuestionIndex = 0
+    var score = 0
     init {
         language = nativeLanguage
         if(nativeLanguage != TranslateLanguage.ENGLISH){
@@ -120,6 +122,23 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             }
         }
 
+        questionList.shuffle()
+
         return questionList
+    }
+
+    fun getCurrentQuestion(): Question? {
+        return _uiState.value.questions?.getOrNull(currentQuestionIndex)
+    }
+
+    fun submitAnswer(answer: String) {
+        val currentQuestion = getCurrentQuestion()
+        if (currentQuestion != null && answer == currentQuestion.answer) {
+            score++
+        }
+        currentQuestionIndex++
+        if (currentQuestionIndex >= (_uiState.value.questions?.size ?: 0)) {
+            currentQuestionIndex = -1
+        }
     }
 }
