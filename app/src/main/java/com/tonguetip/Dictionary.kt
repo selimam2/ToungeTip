@@ -86,6 +86,12 @@ class Dictionary:DictionaryInterface {
                             break
                         }
                     }
+                    var mainMeaning:Definition? = null
+                    if(entry.meanings.isNotEmpty() && entry.meanings[0].definitions.isNotEmpty())
+                    {
+                        val serialDef = entry.meanings[0].definitions[0]
+                        mainMeaning = Definition(serialDef.definition,serialDef.example,serialDef.synonyms,serialDef.antonyms)
+                    }
                     val meanings = LinkedHashMap<PartOfSpeech, List<Definition>>()
                     for(meaning in entry.meanings){
                         val definitions = mutableListOf<Definition>()
@@ -94,7 +100,7 @@ class Dictionary:DictionaryInterface {
                         }
                         meanings[PartOfSpeech.fromString(meaning.partOfSpeech)] = definitions
                     }
-                    val returnEntry = DictionaryEntry(word,pronunciationURL,meanings)
+                    val returnEntry = DictionaryEntry(word,pronunciationURL,meanings, mainMeaning)
                     returnEntry
                 } else {
                     null
