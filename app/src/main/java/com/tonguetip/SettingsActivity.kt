@@ -18,16 +18,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -51,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.tonguetip.ui.theme.TongueTipTheme
 
@@ -74,9 +78,13 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
+    override fun onDestroy() {
+        DatabaseHandler.closeDatabase()
+        super.onDestroy()
+    }
 }
 @Composable
-fun ShowSettings(sharedPreferences: SharedPreferences){
+fun ShowSettings(sharedPreferences: SharedPreferences, viewModel: SettingsActivityViewModel = viewModel()){
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,6 +119,24 @@ fun ShowSettings(sharedPreferences: SharedPreferences){
                     TranslateLanguage.RUSSIAN to "Russian (Ru)"),sharedPreferences)
             }
         }
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            contentAlignment = Alignment.Center // Align text to the center horizontally
+        )
+        {
+            ElevatedButton(onClick = {viewModel.insertDemoSuggestions()}) {
+                Text(
+                    text = "Erase Database",
+                    textAlign = TextAlign.Left,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(5.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.size(90.dp))
 
     }
 }

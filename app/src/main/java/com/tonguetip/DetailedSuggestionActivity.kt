@@ -248,8 +248,6 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
 
             }
         }
-        
-
     }
 }
 @OptIn(ExperimentalFoundationApi::class)
