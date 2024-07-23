@@ -75,6 +75,9 @@ fun HamburgerMenu(context: Context, title:String = "", modifier: Modifier = Modi
                 Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, LaunchedActivity::class.java)) }) {
                     Text(text = "Home")
                 }
+                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, QuizActivity::class.java)) }) {
+                    Text(text = "Quiz")
+                }
                 Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {context.startActivity(Intent(context, UserMetricsActivity::class.java)) }) {
                     Text(text = "Metrics")
                 }
