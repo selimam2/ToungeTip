@@ -80,9 +80,9 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
-    override fun onDestroy() {
+    override fun onStop() {
         DatabaseHandler.closeDatabase()
-        super.onDestroy()
+        super.onStop()
     }
 }
 @Composable
