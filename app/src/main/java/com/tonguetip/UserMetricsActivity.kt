@@ -54,8 +54,11 @@ class UserMetricsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent{
             TongueTipTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    DisplayMetrics()
+                HamburgerMenu(this, "Your Metrics")
+                {
+                    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize(),) {
+                        DisplayMetrics()
+                    }
                 }
             }
         }
@@ -76,19 +79,6 @@ fun DisplayMetrics(viewModel: UserMetricsActivityViewModel = viewModel()){
             .fillMaxHeight()
             .padding(10.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            contentAlignment = Alignment.Center // Align text to the center horizontally
-        )
-        {
-            Text(
-                text = "Your Metrics",
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
         OutlinedCard(modifier = Modifier.padding(5.dp).fillMaxSize()){
             val metrics = uiState.metrics
             if(!metrics.isNullOrEmpty())

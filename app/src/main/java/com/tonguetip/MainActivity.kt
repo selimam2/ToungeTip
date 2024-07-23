@@ -52,7 +52,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MainScreen()
+            TongueTipTheme {
+                HamburgerMenu(this)
+                {
+                    MainScreen()
+                }
+            }
         }
     }
 }
@@ -63,7 +68,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val suggestions = uiState.suggestions
     recognizer!!.initUpdateFn(viewModel::updateLiveText)
-
     TongueTipTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),

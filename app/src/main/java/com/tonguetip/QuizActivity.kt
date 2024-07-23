@@ -41,12 +41,13 @@ class QuizActivity : ComponentActivity() {
         val nativeLang = sharedPreference.getString("NativeLanguage", TranslateLanguage.ENGLISH)
         setContent{
             TongueTipTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    if(nativeLang != null){
-                        QuizScreen(nativeLang)
-                    }
-                    else{
-                        QuizScreen()
+                HamburgerMenu(context = this, "Quiz") {
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        if (nativeLang != null) {
+                            QuizScreen(nativeLang)
+                        } else {
+                            QuizScreen()
+                        }
                     }
                 }
             }

@@ -69,11 +69,13 @@ class SettingsActivity : ComponentActivity() {
             val sharedPreference =  this.getSharedPreferences("TONGUETIP_SETTINGS",Context.MODE_PRIVATE)
 
             TongueTipTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    ShowSettings(sharedPreference);
+                HamburgerMenu(context = this, "Settings") {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        ShowSettings(sharedPreference);
+                    }
                 }
             }
         }
@@ -91,19 +93,6 @@ fun ShowSettings(sharedPreferences: SharedPreferences, viewModel: SettingsActivi
             .fillMaxHeight()
             .padding(10.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            contentAlignment = Alignment.Center // Align text to the center horizontally
-        )
-        {
-            Text(
-                text = "Settings",
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()

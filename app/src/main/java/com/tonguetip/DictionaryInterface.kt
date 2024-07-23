@@ -23,7 +23,8 @@ data class Definition(
 data class DictionaryEntry(
     val word: String,
     val pronunciationURL: String?,
-    val meanings: LinkedHashMap<PartOfSpeech,List<Definition>>?
+    val meanings: LinkedHashMap<PartOfSpeech,List<Definition>>?,
+    val mainDefinition: Definition?
 )
 interface DictionaryInterface {
     suspend fun getDictionaryEntry(word: String): DictionaryEntry?
