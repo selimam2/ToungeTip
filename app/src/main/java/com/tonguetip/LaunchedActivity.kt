@@ -53,7 +53,6 @@ class LaunchedActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
                     Column(modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(),
@@ -67,7 +66,6 @@ class LaunchedActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             )
                             {
-
                                 Text(text = "Start Listening")
                             }
                         }
@@ -84,7 +82,6 @@ class LaunchedActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                             )
                             {
-
                                 Text(text = "Need Recording Permissions")
                             }
                         }

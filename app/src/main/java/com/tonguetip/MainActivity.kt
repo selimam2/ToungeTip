@@ -94,7 +94,7 @@ fun MainScreen(
                                     if (index + 1 < suggestions.size) {
                                         SuggestionBox(text = suggestions[index + 1])
                                     } else {
-                                        SuggestionBoxPlaceholder()
+                                        //SuggestionBoxPlaceholder()
                                     }
                                 }
                             }
