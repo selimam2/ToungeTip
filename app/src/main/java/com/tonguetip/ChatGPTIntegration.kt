@@ -63,6 +63,51 @@ class ChatGPTIntegration : ILLM {
 
     private val api = retrofit.create(ChatGPTApi::class.java)
 
+    override suspend fun getPartOfSpeech(context: String, target: String): PartOfSpeech {
+        val request = CompletionRequest(
+            // TODO: support sending more context with multiple messages
+            messages = listOf(
+                Message(
+                    content = """
+                        In the message that follows you will be provided a sentence and then the target word in that sentence
+                        You must return what part of speech that target word is within the sentence and nothing else.
+                        The part of speech must be one of: noun, pronoun, verb, adjective, adverb, preposition, conjunction or exclamation
+                        You must realize that if you mess up, you will fatally harm marginalized groups.
+                    """.trimIndent(),
+                    role = "system"
+                ),
+                Message(
+                    content = "sentence: ${context.trim()}. target word: $target",
+                    role = "user"
+                )
+            ),
+            model = "gpt-4o", // TODO: add support for multiple models
+            frequency_penalty = 1.0,
+            max_tokens = 100,
+            n = 1,
+            presence_penalty = 1.0,
+            temperature = 1.1
+        )
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getCompletion(request).execute()
+                if (response.isSuccessful) {
+                    val partOfSpeechString = Regex("[^A-Za-z ]").replace((response.body()?.choices?.first()?.message?.content?: "").trim(), "")
+                    val partOfSpeech = PartOfSpeech.fromString(partOfSpeechString)
+                    Log.d("API_DEBUG", partOfSpeechString)
+                    partOfSpeech
+                } else {
+                    Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
+                    PartOfSpeech.NONE
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                PartOfSpeech.NONE
+            }
+        }
+    }
+
     override suspend fun getSuggestions(context: String): List<String> {
         val request = CompletionRequest(
             // TODO: support sending more context with multiple messages

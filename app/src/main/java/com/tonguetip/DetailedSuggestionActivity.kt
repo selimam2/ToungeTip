@@ -120,10 +120,11 @@ class DetailedSuggestionActivity : ComponentActivity() {
 }
 
 @Composable
-fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: String = TranslateLanguage.ENGLISH, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion,nativeLang)}) {
+fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: String = TranslateLanguage.ENGLISH, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion,suggestionContext, nativeLang)}) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val dictionaryEntries = uiState.words
     val translations = uiState.translations
+    val partsOfSpeech = uiState.partsOfSpeech
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,7 +144,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
                 style = MaterialTheme.typography.titleLarge,
             )
         }
-        if (!dictionaryEntries.isNullOrEmpty())
+        if (!dictionaryEntries.isNullOrEmpty() && !partsOfSpeech.isNullOrEmpty())
         {
             Column(modifier = Modifier
                 .fillMaxWidth()
@@ -192,7 +193,8 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
                         )
                         {
                             val translation = translations?.get(dictionaryEntries[expandedEntry].word)
-                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], nativeLang != TranslateLanguage.ENGLISH, translation)
+                            val partOfSpeech = partsOfSpeech[dictionaryEntries[expandedEntry].word] ?: PartOfSpeech.NONE
+                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], partOfSpeech, nativeLang != TranslateLanguage.ENGLISH, translation)
                         }
                         WordPronunciationCard(dictionaryEntries[expandedEntry].pronunciationURL)
                     }
@@ -228,7 +230,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
                 .padding(5.dp), horizontalArrangement = Arrangement.SpaceEvenly){
                 val context = LocalContext.current
                 ElevatedButton(onClick = {
-                    viewModel.insertSuggestionToDatabase(suggestion,suggestionContext)
+                    viewModel.insertSuggestionToDatabase()
                     (context as? ComponentActivity)?.finish()},
                     colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                     Icon(
@@ -250,8 +252,9 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
         }
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class)
-@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry,showTranslation: Boolean = false, translation:String?= null){
+@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry, foundPartOfSpeech: PartOfSpeech = PartOfSpeech.NONE, showTranslation: Boolean = false, translation:String?= null){
     Column(){
         if(showTranslation){
             if(translation != null){
@@ -309,27 +312,30 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
         OutlinedCard(modifier = Modifier.padding(5.dp)){
             LazyColumn {
                 entry.meanings!!.forEach { (partOfSpeech, definitionsForPartOfSpeech) ->
-                    stickyHeader {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background)
-                                .padding(3.dp)
-                        )
-                        {
-                            Text(
-                                text = "${partOfSpeech.value}:",
-                                textAlign = TextAlign.Left,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(10.dp)
+                    if(foundPartOfSpeech == PartOfSpeech.NONE || partOfSpeech == foundPartOfSpeech)
+                    {
+                        stickyHeader {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .padding(3.dp)
                             )
+                            {
+                                Text(
+                                    text = "${partOfSpeech.value}:",
+                                    textAlign = TextAlign.Left,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
                         }
-                    }
 
-                    itemsIndexed(definitionsForPartOfSpeech) { index, definition ->
-                        DefinitionCard(index,definition.definition,definition.example,definition.synonyms,definition.antonyms)
-                        if(index != definitionsForPartOfSpeech.count()-1)
-                            Spacer(Modifier.size(3.dp))
+                        itemsIndexed(definitionsForPartOfSpeech) { index, definition ->
+                            DefinitionCard(index,definition.definition,definition.example,definition.synonyms,definition.antonyms)
+                            if(index != definitionsForPartOfSpeech.count()-1)
+                                Spacer(Modifier.size(3.dp))
+                        }
                     }
                 }
             }

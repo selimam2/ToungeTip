@@ -16,9 +16,11 @@ import java.time.LocalDate
 
 data class DetailedSuggestionState(
     val words: List<DictionaryEntry>? = null,
-    val translations: LinkedHashMap<String,String>? = null
+    val translations: LinkedHashMap<String,String>? = null,
+    val partsOfSpeech: LinkedHashMap<String, PartOfSpeech>? = null
 )
-class DetailedSuggestionActivityViewModel(private val suggestion : String, nativeLanguage: String) : ViewModel() {
+class DetailedSuggestionActivityViewModel(private var suggestion : String,private var suggestionContext:String, nativeLanguage: String) : ViewModel() {
+    private val gpt = ChatGPTIntegration()
     private val dictionaryIntegration = Dictionary()
     private var translationIntegration:TranslationService? = null
     private var shownWords: MutableList<String> = mutableListOf() // Mirror of detailedsuggestionstate words for use by translation
@@ -28,12 +30,13 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String, nativ
 
     private val re = Regex("[^A-Za-z ]")
 
-    var suggestions: List<String> = emptyList()
+    private var suggestions: List<String> = emptyList()
 
     init {
         val trimmedSuggestion = suggestion.trim()
-        val stripSpecial = re.replace(trimmedSuggestion, "")
-        suggestions = stripSpecial.split("\\s+".toRegex())
+        suggestion = re.replace(trimmedSuggestion, "")
+        suggestions = suggestion.split("\\s+".toRegex())
+        updatePartsOfSpeech()
         updateSuggestionDictionary()
         if(nativeLanguage != TranslateLanguage.ENGLISH){
             translationIntegration = TranslationService(TranslateLanguage.ENGLISH,nativeLanguage)
@@ -59,6 +62,20 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String, nativ
             }
         }
     }
+     private fun updatePartsOfSpeech(){
+         viewModelScope.launch {
+             val partsOfSpeech = linkedMapOf<String, PartOfSpeech>()
+             for (sug in suggestions) {
+                 partsOfSpeech[suggestion] = (gpt.getPartOfSpeech(suggestionContext, suggestion))
+             }
+             _uiState.update { currentState ->
+                 currentState.copy(
+                     partsOfSpeech = partsOfSpeech
+                 )
+             }
+         }
+    }
+
     private fun updateSuggestionDictionary() {
         viewModelScope.launch {
             val entries = mutableListOf<DictionaryEntry>()
@@ -79,9 +96,10 @@ class DetailedSuggestionActivityViewModel(private val suggestion : String, nativ
         return suggestions.size > 1
     }
 
-    fun insertSuggestionToDatabase(suggestion: String, contextString: String){
+    fun insertSuggestionToDatabase(){
         viewModelScope.launch{
-            DatabaseHandler.addSuggestion(suggestion, SuggestionContext(contextString, LocalDate.now()))
+            val partOfSpeechOverall = (if(suggestions.size > 1 || _uiState.value.partsOfSpeech.isNullOrEmpty()) PartOfSpeech.NONE else _uiState.value.partsOfSpeech!![suggestions[0]]) ?: PartOfSpeech.NONE
+            DatabaseHandler.addSuggestion(suggestion, SuggestionContext(suggestionContext, LocalDate.now(), partOfSpeechOverall))
         }
     }
 }

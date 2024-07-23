@@ -8,10 +8,13 @@ enum class PartOfSpeech(val value: String){
     ADVERB("adverb"),
     PREPOSITION("preposition"),
     CONJUNCTION("conjunction"),
-    EXCLAMATION("exclamation");
+    EXCLAMATION("exclamation"),
+    NONE ("none");
 
     companion object {
-        fun fromString(value: String) = entries.first {it.value == value}
+        fun fromString(value: String):PartOfSpeech {
+            return entries.find { it.value == value } ?: NONE
+        }
     }
 }
 data class Definition(

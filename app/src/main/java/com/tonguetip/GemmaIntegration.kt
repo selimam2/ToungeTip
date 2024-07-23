@@ -32,6 +32,10 @@ class GemmaIntegration private  constructor() : ILLM {
         llm  = LlmInference.createFromOptions(context, options)
     }
 
+    override suspend fun getPartOfSpeech(context: String, target: String): PartOfSpeech {
+        return PartOfSpeech.NONE // TODO: Add gemma version of this
+    }
+
     override suspend fun getSuggestions(context: String): List<String> {
         val completions = mutableListOf<String>()
         for (i in (1..8)) {

@@ -12,7 +12,8 @@ import java.time.format.DateTimeFormatter
 // A suggestion context (i.e. the sentence that caused the LLM to give the suggestion)
 data class SuggestionContext(
     val contextString: String,
-    val dateSuggested: LocalDate
+    val dateSuggested: LocalDate,
+    val partOfSpeech: PartOfSpeech = PartOfSpeech.NONE // Set to none if multiword context
 )
 
 // Defines all table and column names for sqlite database
@@ -28,6 +29,7 @@ object SuggestionHistoryContract {
         const val TABLE_NAME = "suggestion_context"
         const val COLUMN_SUG_KEY = "suggestion_key"
         const val COLUMN_SUGGESTION_SENTENCE = "sentence"
+        const val COLUMN_SUGGESTION_PARTOFSPEECH = "pos"
         const val COLUMN_SUGGESTION_DATE = "date"
     }
 }
@@ -39,7 +41,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
     // Companion object/singleton
     companion object {
         // Constant values for database handler
-        const val DATABASE_VERSION = 4
+        const val DATABASE_VERSION = 5
         const val DATABASE_NAME = "SuggestionHistory.db"
 
         // SQLITE queries for creating and deleting tables
@@ -54,6 +56,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                     "${BaseColumns._ID} INTEGER PRIMARY KEY," +
                     "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} INTEGER," +
                     "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE} TEXT," +
+                    "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_PARTOFSPEECH} TEXT," +
                     "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE} TEXT," +
                     "FOREIGN KEY(${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY}) " +
                     "REFERENCES ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME}(${BaseColumns._ID}))"
@@ -291,6 +294,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             val numContextsString = if(numContexts == null) "" else "LIMIT $numContexts"
 
             val QUERY = "SELECT ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE}, " +
+                    "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_PARTOFSPEECH}, " +
                     "${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE} FROM " +
                     "${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} JOIN ${SuggestionHistoryContract.SuggestionContextsEntry.TABLE_NAME} " +
                     "ON ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME}.${BaseColumns._ID} = ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} " +
@@ -307,7 +311,9 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                         getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE)),
                         DateTimeFormatter.BASIC_ISO_DATE)
 
-                    suggestionContexts.add(SuggestionContext(contextString,contextDate))
+                    val contextPartOfSpeech = PartOfSpeech.fromString(getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE)))
+
+                    suggestionContexts.add(SuggestionContext(contextString,contextDate,contextPartOfSpeech))
                 }
             }
             cursor.close()
@@ -344,6 +350,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                 val values = ContentValues().apply {
                     put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY, itemID)
                     put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE, cleanSuggestionContext)
+                    put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_PARTOFSPEECH, suggestionContext.partOfSpeech.value)
                     put(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE, suggestionContext.dateSuggested.format(
                         DateTimeFormatter.BASIC_ISO_DATE))
                 }
@@ -382,20 +389,22 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
         fun loadDemoSuggestions(){
             deleteAllEntries()
-            addSuggestion("weekend",SuggestionContext("How was your", LocalDate.now().minusDays(1)))
-            addSuggestion("book",SuggestionContext("I just got a new", LocalDate.now().minusDays(1)))
-            addSuggestion("tonight",SuggestionContext("What are your plans for", LocalDate.now().minusDays(2)))
-            addSuggestion("weather",SuggestionContext("I love this", LocalDate.now().minusDays(2)))
-            addSuggestion("pets",SuggestionContext("Do you have any", LocalDate.now().minusDays(3)))
-            addSuggestion("movie",SuggestionContext("Have you seen the latest", LocalDate.now().minusDays(4)))
-            addSuggestion("recipe",SuggestionContext("I tried a new", LocalDate.now().minusDays(5)))
-            addSuggestion("going",SuggestionContext("How's work", LocalDate.now().minusDays(5)))
-            addSuggestion("guitar",SuggestionContext("I'm learning to play the", LocalDate.now().minusDays(7)))
-            addSuggestion("restaurant",SuggestionContext("Can you recommend a good", LocalDate.now().minusDays(8)))
-            addSuggestion("soon",SuggestionContext("I need a vacation", LocalDate.now().minusDays(10)))
-            addSuggestion("hobby",SuggestionContext("What's your favorite", LocalDate.now().minusDays(10)))
-            addSuggestion("dog",SuggestionContext("I'm thinking of adopting a", LocalDate.now().minusDays(10)))
-            addSuggestion("abroad",SuggestionContext("Have you ever traveled", LocalDate.now().minusDays(15)))
+            addSuggestion("weekend",SuggestionContext("How was your", LocalDate.now().minusDays(1), PartOfSpeech.NOUN))
+            addSuggestion("book",SuggestionContext("I just got a new", LocalDate.now().minusDays(1), PartOfSpeech.NOUN))
+            addSuggestion("tonight",SuggestionContext("What are your plans for", LocalDate.now().minusDays(2), PartOfSpeech.NOUN))
+            addSuggestion("weather",SuggestionContext("I love this", LocalDate.now().minusDays(2), PartOfSpeech.NOUN))
+            addSuggestion("pets",SuggestionContext("Do you have any", LocalDate.now().minusDays(3), PartOfSpeech.NOUN))
+            addSuggestion("catch",SuggestionContext("She ran quickly to", LocalDate.now().minusDays(4), PartOfSpeech.VERB))
+            addSuggestion("cheerfully",SuggestionContext("He smiled", LocalDate.now().minusDays(5), PartOfSpeech.ADVERB))
+            addSuggestion("her",SuggestionContext("The book on the shelf belongs to", LocalDate.now().minusDays(5), PartOfSpeech.PRONOUN))
+            addSuggestion("guitar",SuggestionContext("I'm learning to play the", LocalDate.now().minusDays(7), PartOfSpeech.NOUN))
+            addSuggestion("together",SuggestionContext("We walked through the park", LocalDate.now().minusDays(8), PartOfSpeech.ADVERB))
+            addSuggestion("soon",SuggestionContext("I need a vacation", LocalDate.now().minusDays(10), PartOfSpeech.ADVERB))
+            addSuggestion("him",SuggestionContext("She sings better than", LocalDate.now().minusDays(10), PartOfSpeech.PRONOUN))
+            addSuggestion("dog",SuggestionContext("I'm thinking of adopting a", LocalDate.now().minusDays(10), PartOfSpeech.NOUN))
+            addSuggestion("abroad",SuggestionContext("Have you ever traveled", LocalDate.now().minusDays(15), PartOfSpeech.ADVERB))
+            addSuggestion("moist",SuggestionContext("The cake was delicious and", LocalDate.now().minusDays(15), PartOfSpeech.ADJECTIVE))
+            addSuggestion("politely",SuggestionContext("She spoke softly and", LocalDate.now().minusDays(15), PartOfSpeech.ADVERB))
         }
     }
 
