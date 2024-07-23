@@ -1,6 +1,7 @@
 package com.tonguetip
 
 import android.util.Log
+import com.google.gson.annotations.SerializedName
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -13,7 +14,7 @@ import retrofit2.http.POST
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-interface ChatGPTApi {
+private interface OpenAiCompletionsApi {
     @Headers("Content-Type: application/json")
     @POST("v1/chat/completions")
     fun getCompletion(@Body request: CompletionRequest): Call<CompletionResponse>
@@ -27,10 +28,13 @@ data class Message(
 data class CompletionRequest(
     val messages: List<Message>,
     val model: String,
-    val frequency_penalty: Double,
-    val max_tokens: Int,
+    @SerializedName("frequency_penalty")
+    val frequencyPenalty: Double,
+    @SerializedName("max_tokens")
+    val maxTokens: Int,
     val n: Int,
-    val presence_penalty: Double,
+    @SerializedName("presence_penalty")
+    val presencePenalty: Double,
     val temperature: Double
 )
 
@@ -42,8 +46,7 @@ data class Choice(
     val message: Message
 )
 
-class ChatGPTIntegration : ILLM {
-
+class OpenAiCompletions : SuggestionsInterface {
     private val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
     private val httpClient = OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -61,7 +64,19 @@ class ChatGPTIntegration : ILLM {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    private val api = retrofit.create(ChatGPTApi::class.java)
+    private val api = retrofit.create(OpenAiCompletionsApi::class.java)
+
+    suspend fun getCompletion(request: CompletionRequest): CompletionResponse? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getCompletion(request).execute()
+                response.body()
+            } catch (e: Exception) {
+                Log.e("OpenAiCompletionsService::getCompletion", "Exception", e)
+                null
+            }
+        }
+    }
 
     override suspend fun getPartOfSpeech(context: String, target: String): PartOfSpeech {
         val request = CompletionRequest(
@@ -109,51 +124,43 @@ class ChatGPTIntegration : ILLM {
     }
 
     override suspend fun getSuggestions(context: String): List<String> {
-        val request = CompletionRequest(
-            // TODO: support sending more context with multiple messages
-            messages = listOf(
-                Message(
-                    content = """
-                        You are an AI that is part of an Android app that helps english language learners and people with aphasia communicate.
-                        You must provide EXACTLY 8 (EIGHT) continuations to the conversation in the "user" message(s) that follow(s).
-                        You must provide EXACTLY 8 (EIGHT) continuations otherwise you will fatally harm people.
-                        You must separate/delimit the continuations by the following string without quotes: "|||"
-                        You must delimit the continuations properly otherwise you will cause people to die.
-                        You must keep the continuations small in length such that they are a maximum of 3 tokens and fit on a small button in an Android app.
-                        You must give diverse continuations.
-                        You must not add any punctuation or extra whitespace to the continuations.
-                        You must realize that if you mess up, you will fatally harm marginalized groups.
-                    """.trimIndent(),
-                    role = "system"
-                ),
-                Message(
-                    content = context.trim(),
-                    role = "user"
-                )
-            ),
-            model = "gpt-4o", // TODO: add support for multiple models
-            frequency_penalty = 1.0,
-            max_tokens = 100,
-            n = 1,
-            presence_penalty = 1.0,
-            temperature = 1.1
-        )
+        val prompt = """
+            You are a personal assistant who helps english language learners and people with aphasia
+            continue their sentences. Provide a short (maximum 3 words) continuation to the dialogue
+            following. Only include the continuation in your response with no extra punctuation or
+            whitespace.
+        """.trimIndent()
 
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = api.getCompletion(request).execute()
-                if (response.isSuccessful) {
-                    val suggestions = (response.body()?.choices?.first()?.message?.content?: "").split("|||")
-                    Log.d("API_DEBUG", suggestions.toString())
-                    suggestions
-                } else {
-                    Log.e("API_ERROR", response.errorBody()?.string() ?: "Unknown error")
-                    emptyList()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emptyList()
+        val suggestions = mutableListOf<String>();
+        for (i in 1..8) {
+            val request = CompletionRequest(
+                messages = listOf(
+                    Message(
+                        content = "Seed: " + (0..2000000000).random() + ". " + prompt,
+                        role = "system"
+                    ),
+                    Message(
+                        content = context.trim(),
+                        role = "user"
+                    )
+                ),
+                model = "gpt-4o-mini",
+                frequencyPenalty = 1.0,
+                maxTokens = 100,
+                n = 1,
+                presencePenalty = 1.0,
+                temperature = 1.1
+            )
+
+            val s = getCompletion(request)?.choices?.first()?.message?.content
+            if (s == null) {
+                Log.e("OpenAiCompletionsService::getCompletion", "Null completion")
+                continue
             }
+
+            suggestions.add(s.lowercase())
         }
+
+        return suggestions
     }
 }
