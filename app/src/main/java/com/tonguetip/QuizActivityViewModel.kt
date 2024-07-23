@@ -19,7 +19,8 @@ data class QuizState(
     val forgottenWords: List<String>? = null,
     val forgottenSentences: LinkedHashMap<String,String>? = null,
     val translatedWords: LinkedHashMap<String,String>? = null,
-    val questions: MutableList<Question>? = null
+    val questions: MutableList<Question>? = null,
+    val score: Int = 0
 )
 
 data class Question(
@@ -32,9 +33,10 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
     private val _uiState = MutableStateFlow(QuizState())
     val uiState: StateFlow<QuizState> = _uiState.asStateFlow()
     private var translationIntegration:TranslationService? = null
+    private val dictionaryIntegration = Dictionary()
     private var language: String = ""
-    private var currentQuestionIndex = 0
-    var score = 0
+    var currentQuestionIndex = 0
+    var currentScore = 0
     init {
         language = nativeLanguage
         if(nativeLanguage != TranslateLanguage.ENGLISH){
@@ -47,7 +49,8 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             // 5 words for questions asking to define a word
             // 5 sentences for questions asking to finish the sentence
             // 5 translation words (if needed)
-            val forgottenWordsList = DatabaseHandler.getNPastSuggestions(15)
+            var forgottenWordsList = DatabaseHandler.getNPastSuggestions(15)
+            forgottenWordsList = forgottenWordsList.shuffled()
             val sentenceList = linkedMapOf<String,String>()
             // Indices 5-9 for sentences
             for (index in 5..9) {
@@ -86,15 +89,18 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
         }
     }
 
-    private fun generateQuestions(forgottenWords: List<String>?, forgottenSentences: LinkedHashMap<String, String>?, translatedWords: LinkedHashMap<String, String>?): MutableList<Question> {
+    private suspend fun generateQuestions(forgottenWords: List<String>?, forgottenSentences: LinkedHashMap<String, String>?, translatedWords: LinkedHashMap<String, String>?): MutableList<Question> {
         val questionList = mutableListOf<Question>()
         if (forgottenWords != null) {
             for (index in 0..4) {
                 if (index in forgottenWords.indices) {
+                    val word = forgottenWords[index]
+                    val entry = dictionaryIntegration.getDictionaryEntry(word) ?: continue
+                    val firstEntry: Map.Entry<PartOfSpeech, List<Definition>>? = entry.meanings?.entries?.firstOrNull()
                     val question = Question(
                         questionType = QuestionTypes.DEFINE_WORD,
-                        header = forgottenWords[index],
-                        answer = null
+                        header = word,
+                        answer = firstEntry?.value?.firstOrNull()?.definition
                     )
                     questionList.add(question)
                 }
@@ -134,11 +140,20 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
     fun submitAnswer(answer: String) {
         val currentQuestion = getCurrentQuestion()
         if (currentQuestion != null && answer == currentQuestion.answer) {
-            score++
+            currentScore++
         }
         currentQuestionIndex++
         if (currentQuestionIndex >= (_uiState.value.questions?.size ?: 0)) {
-            currentQuestionIndex = -1
+            _uiState.update { currentState ->
+                currentState.copy(questions = null)
+            }
+        } else {
+            // Update state with new current question
+            _uiState.update { currentState ->
+                currentState.copy(
+                    score = currentScore
+                )
+            }
         }
     }
 }

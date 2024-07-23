@@ -1,5 +1,6 @@
 package com.tonguetip
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,7 +19,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,23 +64,52 @@ fun QuizScreen(
     val forgottenWords = uiState.forgottenWords
     val forgottenSentences = uiState.forgottenSentences
     val currentQuestion = viewModel.getCurrentQuestion()
+    val score = viewModel.currentScore
+    val currentIndex = viewModel.currentQuestionIndex
 
-    if (currentQuestion != null) {
-        QuestionView(
-            question = currentQuestion,
-            onAnswerSelected = { answer ->
-                viewModel.submitAnswer(answer)
-            }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Display the score at the top
+        Text(
+            text = "Score: $score / $currentIndex",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.CenterHorizontally)
         )
-    } else {
-        // No more questions
-        Text("Quiz finished!", modifier = Modifier.padding(16.dp))
+
+        // Display the current question or the finish message
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .weight(1f) // Take up remaining space
+        ) {
+            if (currentQuestion != null) {
+                QuestionView(
+                    question = currentQuestion,
+                    onAnswerSelected = { answer ->
+                        viewModel.submitAnswer(answer)
+                    }
+                )
+            } else {
+                // No more questions
+                Text(
+                    text = "Daily quiz finished!",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.Center)
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun QuestionView(question: Question, onAnswerSelected: (String) -> Unit) {
-    val options = remember { generateOptions(question.answer ?: "") }
+    val options by rememberUpdatedState(generateOptions(question.questionType, question.answer ?: ""))
 
     Column(
         modifier = Modifier
@@ -120,7 +153,7 @@ fun AnswerTile(answer: String, onClick: (String) -> Unit) {
     }
 }
 
-fun generateOptions(correctAnswer: String): List<String> {
+fun generateOptions(type: QuestionTypes, correctAnswer: String): List<String> {
     val options = mutableListOf(correctAnswer, "Option 1", "Option 2", "Option 3")
     options.shuffle()
     return options

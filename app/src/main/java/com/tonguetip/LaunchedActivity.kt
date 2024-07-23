@@ -62,7 +62,7 @@ class LaunchedActivity : ComponentActivity() {
                         if (canRecord)
                         {
                             Button(
-                                onClick = {context.startActivity(Intent(context, MainActivity::class.java))},
+                                onClick = {context.startActivity(Intent(context, QuizActivity::class.java))},
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             )
                             {
