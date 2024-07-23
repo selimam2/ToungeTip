@@ -42,7 +42,7 @@ data class Choice(
     val message: Message
 )
 
-class ChatGPTIntegration {
+class ChatGPTIntegration : ILLM {
 
     private val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
     private val httpClient = OkHttpClient.Builder()
@@ -63,7 +63,7 @@ class ChatGPTIntegration {
 
     private val api = retrofit.create(ChatGPTApi::class.java)
 
-    suspend fun getSuggestions(context: String): List<String> {
+    override suspend fun getSuggestions(context: String): List<String> {
         val request = CompletionRequest(
             // TODO: support sending more context with multiple messages
             messages = listOf(

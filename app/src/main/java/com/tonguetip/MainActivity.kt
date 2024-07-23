@@ -29,6 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Composition
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,7 +72,9 @@ fun MainScreen(
             Column()
             {
                 Column(
-                    modifier = Modifier.fillMaxWidth().weight(1f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
                     ListeningStatus()
                     Spacer(modifier = Modifier.height(100.dp))
@@ -87,7 +91,9 @@ fun MainScreen(
                         itemsIndexed(suggestions) { index, _ ->
                             if (index % 2 == 0) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().weight(1f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
                                     SuggestionBox(text = suggestions[index])
@@ -125,13 +131,14 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
 
     Box(
         modifier = Modifier
-            .fillMaxWidth().padding(vertical = 20.dp),
+            .fillMaxWidth()
+            .padding(vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) {
         Button(
             onClick = {
                 recognizer!!.stopListening()
-                viewModel.buttonTest() },
+                viewModel.buttonTest(context) },
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.size(250.dp)
@@ -147,7 +154,8 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
 fun LiveText(liveText: String, modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
-            .fillMaxWidth().padding(20.dp),
+            .fillMaxWidth()
+            .padding(20.dp),
         contentAlignment = Alignment.Center // Align text to the center horizontally
     )
     {
@@ -184,7 +192,7 @@ fun SuggestionBox(text: String, viewModel: MainActivityViewModel = viewModel()) 
             .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(8.dp))
             .height(80.dp)
             .clickable(onClick = {
-                var intent = Intent(context,DetailedSuggestionActivity::class.java)
+                var intent = Intent(context, DetailedSuggestionActivity::class.java)
                 intent.putExtra("suggestion", text)
                 intent.putExtra("suggestionContext", uiState.liveTextString)
                 context.startActivity(intent)

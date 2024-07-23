@@ -1,5 +1,6 @@
 package com.tonguetip
 
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 
 data class MainUIState(
     val isListening: Boolean = true,
@@ -18,14 +20,15 @@ class MainActivityViewModel : ViewModel() {
 
     private val chatGPTIntegration = ChatGPTIntegration()
 
-    // Expose screen UI state
     private val _uiState = MutableStateFlow(MainUIState())
     val uiState: StateFlow<MainUIState> = _uiState.asStateFlow()
 
     // Handle business logic
-    fun buttonTest() {
+
+    fun buttonTest(ctx : android.content.Context) {
         viewModelScope.launch {
-            // TODO: figure out a way to pass the actual context to this
+            //val gemma = GemmaIntegration(ctx)
+
             val suggestions = chatGPTIntegration.getSuggestions(_uiState.value.liveTextString)
             _uiState.update { currentState ->
                 currentState.copy(
