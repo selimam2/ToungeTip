@@ -234,7 +234,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             // Get all if no limit given
             var QUERY = "SELECT ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME} FROM " +
                     "${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} " +
-                    "ORDER BY ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME} COLLATE NOCASE ASC"
+                    "ORDER BY ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME} GLOB '[A-Za-z]*' DESC, ${SuggestionHistoryContract.SuggestionEntry.COLUMN_SUGGESTION_NAME}"
 
             // Get only n highest alphabetically words
             if(numSuggestions != null)
