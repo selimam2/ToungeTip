@@ -54,7 +54,7 @@ class UserDictionaryActivityViewModel() : ViewModel(), DefaultLifecycleObserver 
 
             _uiState.update { currentState ->
                 currentState.copy(
-                    dictionary = dict
+                    dictionary = dict.toSortedMap()
                 )
             }
         }

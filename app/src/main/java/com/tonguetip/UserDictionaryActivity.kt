@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,8 @@ import com.tonguetip.ui.theme.TongueTipTheme
 class UserDictionaryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val viewModel:UserDictionaryActivityViewModel by viewModels()
+        lifecycle.addObserver(viewModel)
         setContent{
             TongueTipTheme {
                 HamburgerMenu(this, "Your Dictionary")

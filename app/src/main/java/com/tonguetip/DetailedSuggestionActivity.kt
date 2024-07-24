@@ -202,7 +202,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
                         {
                             val translation = translations?.get(dictionaryEntries[expandedEntry].word)
                             val partOfSpeech = partsOfSpeech[dictionaryEntries[expandedEntry].word] ?: PartOfSpeech.NONE
-                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], partOfSpeech, nativeLang != TranslateLanguage.ENGLISH, translation)
+                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], partOfSpeech, nativeLang != TranslateLanguage.ENGLISH, translation, showAllDefinitions = !showCorrectCard)
                         }
                         WordPronunciationCard(dictionaryEntries[expandedEntry].pronunciationURL)
                     }
@@ -317,7 +317,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry, foundPartOfSpeech: PartOfSpeech = PartOfSpeech.NONE, showTranslation: Boolean = false, translation:String?= null){
+@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry, foundPartOfSpeech: PartOfSpeech = PartOfSpeech.NONE, showTranslation: Boolean = false, translation:String?= null, showAllDefinitions: Boolean = false){
     Column(){
         if(showTranslation){
             if(translation != null){
@@ -378,7 +378,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
         OutlinedCard(modifier = Modifier.padding(5.dp)){
             LazyColumn {
                 entry.meanings!!.forEach { (partOfSpeech, definitionsForPartOfSpeech) ->
-                    if(foundPartOfSpeech == PartOfSpeech.NONE || partOfSpeech == foundPartOfSpeech)
+                    if(foundPartOfSpeech == PartOfSpeech.NONE || partOfSpeech == foundPartOfSpeech || showAllDefinitions)
                     {
                         stickyHeader {
                             Row(
