@@ -170,8 +170,11 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
     ) {
         Button(
             onClick = {
-                recognizer!!.stopListening()
-                viewModel.buttonTest(context) },
+                       if(viewModel.buttonTest(context))
+                       {
+                           recognizer!!.stopListening()
+                       }
+                 },
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.size(250.dp)

@@ -1,5 +1,6 @@
 package com.tonguetip
 
+import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import java.io.File
 import java.io.FileOutputStream
@@ -8,7 +9,7 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
     private val MODEL_PATH = "/data/local/tmp/llm/"
     private val MODEL_FILE_NAME = "gemma-2b-it-gpu-int4.bin"
     private var llm : LlmInference
-
+    private val ctx : android.content.Context
     init {
         val modelPath = File(MODEL_PATH + MODEL_FILE_NAME)
         if (!modelPath.exists()) {
@@ -22,12 +23,12 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
         // Set the configuration options for the LLM Inference task
         val options = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
-            .setMaxTokens(1000)
             .setTopK(40)
-            .setTemperature(0.2f)
+            .setMaxTokens(50)
+            .setTemperature(1.5f)
             .setRandomSeed((0..2000000000).random())
             .build()
-
+        ctx = context
         // Create an instance of the LLM Inference task
         llm = LlmInference.createFromOptions(context, options)
     }
@@ -37,11 +38,35 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
     }
 
     override suspend fun getSuggestions(context: String): List<String> {
-        val suggestions = mutableListOf<String>()
-        for (i in (1..8)) {
-            val content = "Seed: " + (0..2000000000).random() + ". Complete the following dialogue using as few words as possible: " + context
-            suggestions.add(llm.generateResponse(content))
+        val prompt = """
+            Only output a continuation of a single word for the following dialogue.
+        """.trimIndent()
+        val context1 = context.trim()
+        var suggestions = mutableListOf<String>()
+        for (i in 1..8)
+        {
+            val request = prompt + context1
+            val options = LlmInference.LlmInferenceOptions.builder()
+                .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
+                .setTopK(40)
+                .setMaxTokens(llm.sizeInTokens(request) + 4)
+                .setTemperature(1.5f)
+                .setRandomSeed((0..2000000000).random())
+                .build()
+            llm.close()
+            llm = LlmInference.createFromOptions(ctx, options)
+            suggestions.add(llm.generateResponse(request))
         }
+        for (j in suggestions)
+        {
+            println(j)
+            println("Done")
+        }
+
+
+
+        llm.close()
+        Log.d("GemmaCompletions::getSuggestions", "Suggestions in  attempt(s)")
 
         return suggestions
     }

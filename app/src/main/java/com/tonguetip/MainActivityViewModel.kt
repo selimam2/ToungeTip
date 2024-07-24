@@ -27,10 +27,16 @@ class MainActivityViewModel : ViewModel() {
 
     // Handle business logic
 
-    fun buttonTest(ctx: Context) {
+    fun buttonTest(ctx: Context) : Boolean {
         // Strategy design pattern: Choose AI backend based on user preferences
         // Store the backend as an implementor of SuggestionsInterface
         val sharedPrefs = ctx.getSharedPreferences("TONGUETIP_SETTINGS", Context.MODE_PRIVATE)
+        val textContext = _uiState.value.liveTextString
+        if (textContext.isBlank()) {
+            Toast.makeText(ctx, "Please continue speaking and try again", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
         when (sharedPrefs.getString("LLMOption", "ChatGPT")) {
             "ChatGPT" -> {
                 suggester = OpenAiCompletions()
@@ -41,12 +47,6 @@ class MainActivityViewModel : ViewModel() {
             }
         }
 
-        val textContext = _uiState.value.liveTextString
-
-        if (textContext.isBlank()) {
-            Toast.makeText(ctx, "Please continue speaking and try again", Toast.LENGTH_SHORT).show()
-            return
-        }
 
         viewModelScope.launch {
             val suggestions = suggester.getSuggestions(textContext)
@@ -58,6 +58,7 @@ class MainActivityViewModel : ViewModel() {
                 )
             }
         }
+        return true
     }
 
     fun updateLiveText(str: String){
