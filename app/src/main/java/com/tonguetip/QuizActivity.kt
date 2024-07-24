@@ -214,7 +214,13 @@ fun generateOptions(correctAnswer: StringContext, forgottenWords: List<StringCon
     val options = mutableSetOf(correctAnswer.string)
 
     // Ensure forgottenWords is not null and filter out the correct answer
-    val wordsList = forgottenWords?.filter { it.string != correctAnswer.string || it.partOfSpeech != correctAnswer.partOfSpeech } ?: emptyList()
+    val wordsListNoAnswer = forgottenWords?.filter {
+        it.string != correctAnswer.string
+    } ?: emptyList()
+
+    val wordsList = wordsListNoAnswer.filter{
+        it.partOfSpeech != correctAnswer.partOfSpeech
+    } ?: emptyList()
 
     // Randomly select 3 words from the list, if there are enough words
     val additionalOptions = if (wordsList.size >= 3) {

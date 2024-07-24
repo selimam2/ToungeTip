@@ -60,7 +60,7 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
             forgottenWordsList = forgottenWordsList.shuffled()
             var contextWordList = mutableListOf<StringContext>()
             for (word in forgottenWordsList) {
-                val context = DatabaseHandler.getContextForSuggestion(word)
+                val context = DatabaseHandler.getContextForSuggestion(word, 1)
                 val wordContext = StringContext(
                     string = word,
                     partOfSpeech = context[0].partOfSpeech
