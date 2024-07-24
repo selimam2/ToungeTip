@@ -43,7 +43,7 @@ class MainActivityViewModel : ViewModel() {
             }
 
             "Gemma" -> {
-                suggester = LocalGemma(ctx)
+                suggester = SmartReply()
             }
         }
 
