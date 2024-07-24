@@ -98,7 +98,9 @@ class Dictionary:DictionaryInterface {
                         for (definition in meaning.definitions){
                             definitions.add(Definition(definition.definition,definition.example,definition.synonyms,definition.antonyms))
                         }
-                        meanings[PartOfSpeech.fromString(meaning.partOfSpeech)] = definitions
+                        val pos = PartOfSpeech.fromString(meaning.partOfSpeech)
+                        meanings[pos] =
+                            if (meanings[pos] != null) meanings[pos]!!.plus(definitions) else definitions
                     }
                     val returnEntry = DictionaryEntry(word,pronunciationURL,meanings, mainMeaning)
                     returnEntry
