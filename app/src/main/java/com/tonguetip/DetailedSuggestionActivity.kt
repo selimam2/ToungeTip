@@ -75,6 +75,8 @@ class DetailedSuggestionActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var suggestion = intent.getStringExtra("suggestion")
         var suggestionContext = intent.getStringExtra("suggestionContext")
+        var hideCorrectCard = intent.getBooleanExtra("hideCorrectCard", false)
+        var strContextList = intent.getStringArrayListExtra("strContextList")
         val sharedPreference =  this.getSharedPreferences("TONGUETIP_SETTINGS",Context.MODE_PRIVATE)
         val nativeLang = sharedPreference.getString("NativeLanguage", TranslateLanguage.ENGLISH)
 
@@ -97,10 +99,20 @@ class DetailedSuggestionActivity : ComponentActivity() {
                     if(suggestion != null){
                         if (suggestionContext != null) {
                             if(nativeLang != null){
-                                DisplaySuggestion(suggestion, suggestionContext, nativeLang)
+                                if (strContextList != null) {
+                                    DisplaySuggestion(suggestion, suggestionContext, nativeLang, showCorrectCard = !hideCorrectCard, strContextList = strContextList )
+                                }
+                                else{
+                                    DisplaySuggestion(suggestion, suggestionContext, nativeLang, showCorrectCard = !hideCorrectCard)
+                                }
                             }
                             else{
-                                DisplaySuggestion(suggestion, suggestionContext)
+                                if (strContextList != null) {
+                                    DisplaySuggestion(suggestion, suggestionContext, showCorrectCard = !hideCorrectCard, strContextList = strContextList)
+                                }
+                                else{
+                                    DisplaySuggestion(suggestion, suggestionContext, showCorrectCard = !hideCorrectCard)
+                                }
                             }
                         }
                     }
@@ -114,9 +126,9 @@ class DetailedSuggestionActivity : ComponentActivity() {
         super.onDestroy()
     }
 }
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: String = TranslateLanguage.ENGLISH, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion,suggestionContext, nativeLang)}) {
+fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: String = TranslateLanguage.ENGLISH, viewModel: DetailedSuggestionActivityViewModel = viewModel{DetailedSuggestionActivityViewModel(suggestion,suggestionContext, nativeLang)}, showCorrectCard: Boolean = true, strContextList: ArrayList<String> = arrayListOf()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val dictionaryEntries = uiState.words
     val translations = uiState.translations
@@ -190,7 +202,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
                         {
                             val translation = translations?.get(dictionaryEntries[expandedEntry].word)
                             val partOfSpeech = partsOfSpeech[dictionaryEntries[expandedEntry].word] ?: PartOfSpeech.NONE
-                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], partOfSpeech, nativeLang != TranslateLanguage.ENGLISH, translation)
+                            DisplayDictionaryEntry(dictionaryEntries[expandedEntry], partOfSpeech, nativeLang != TranslateLanguage.ENGLISH, translation, showAllDefinitions = !showCorrectCard)
                         }
                         WordPronunciationCard(dictionaryEntries[expandedEntry].pronunciationURL)
                     }
@@ -210,49 +222,102 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
             }
 
         }
-        ElevatedCard(
-            elevation = CardDefaults.cardElevation(
-            defaultElevation = 5.dp),modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()) {
-            Text(
-                modifier = Modifier
+        if(showCorrectCard) {
+            ElevatedCard(
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 5.dp
+                ), modifier = Modifier
+                    .padding(10.dp)
                     .fillMaxWidth()
-                    .padding(5.dp),
-                text = "Was this Suggestion Correct?",
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp), horizontalArrangement = Arrangement.SpaceEvenly){
-                val context = LocalContext.current
-                ElevatedButton(onClick = {
-                    viewModel.insertSuggestionToDatabase()
-                    (context as? ComponentActivity)?.finish()},
-                    colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Correct Word Icon",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                OutlinedButton(onClick = {
-                        (context as? ComponentActivity)?.finish()
-                    }, colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.background)) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Incorrect Word Icon"
-                    )
-                }
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    text = "Was this Suggestion Correct?",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp), horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    val context = LocalContext.current
+                    ElevatedButton(
+                        onClick = {
+                            viewModel.insertSuggestionToDatabase()
+                            (context as? ComponentActivity)?.finish()
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Correct Word Icon",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            (context as? ComponentActivity)?.finish()
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.background)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Incorrect Word Icon"
+                        )
+                    }
 
+                }
+            }
+        }
+        else{
+            OutlinedCard(modifier = Modifier.padding(5.dp)){
+                LazyColumn {
+                        stickyHeader {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .padding(3.dp)
+                            )
+                            {
+                                Text(
+                                    text = "You used this word in the previous context(s):",
+                                    textAlign = TextAlign.Left,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
+                        }
+                        itemsIndexed(strContextList) { index, str ->
+                            ElevatedCard(
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 3.dp
+                                ),
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .padding(10.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = str,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
+                            if(index != strContextList.count()-1)
+                                Spacer(Modifier.size(3.dp))
+                        }
+                }
             }
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry, foundPartOfSpeech: PartOfSpeech = PartOfSpeech.NONE, showTranslation: Boolean = false, translation:String?= null){
+@Composable fun DisplayDictionaryEntry(entry: DictionaryEntry, foundPartOfSpeech: PartOfSpeech = PartOfSpeech.NONE, showTranslation: Boolean = false, translation:String?= null, showAllDefinitions: Boolean = false){
     Column(){
         if(showTranslation){
             if(translation != null){
@@ -313,7 +378,7 @@ fun DisplaySuggestion(suggestion: String, suggestionContext: String,nativeLang: 
         OutlinedCard(modifier = Modifier.padding(5.dp)){
             LazyColumn {
                 entry.meanings!!.forEach { (partOfSpeech, definitionsForPartOfSpeech) ->
-                    if(foundPartOfSpeech == PartOfSpeech.NONE || partOfSpeech == foundPartOfSpeech)
+                    if(foundPartOfSpeech == PartOfSpeech.NONE || partOfSpeech == foundPartOfSpeech || showAllDefinitions)
                     {
                         stickyHeader {
                             Row(

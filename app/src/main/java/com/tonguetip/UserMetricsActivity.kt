@@ -3,6 +3,7 @@ package com.tonguetip
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +53,9 @@ import com.tonguetip.ui.theme.TongueTipTheme
 class UserMetricsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val viewModel:UserMetricsActivityViewModel by viewModels()
+        lifecycle.addObserver(viewModel)
+
         setContent{
             TongueTipTheme {
                 HamburgerMenu(this, "Your Metrics")

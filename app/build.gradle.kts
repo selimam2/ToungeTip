@@ -81,7 +81,9 @@ dependencies {
     implementation ("com.google.mediapipe:tasks-genai:0.10.14")
     implementation("org.apache.commons:commons-compress:1.26.2")
 
-    // Add ML Kit for translation featur
+    // Add ML Kit for translation feature
     implementation("com.google.mlkit:translate:17.0.2")
+    // Add ML kit for Smart Reply
+    implementation("com.google.mlkit:smart-reply:17.0.3")
 
 }

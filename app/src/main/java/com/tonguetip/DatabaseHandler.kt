@@ -139,7 +139,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                     "${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME} JOIN ${SuggestionHistoryContract.SuggestionContextsEntry.TABLE_NAME} " +
                     "ON ${SuggestionHistoryContract.SuggestionEntry.TABLE_NAME}.${BaseColumns._ID} = ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} " +
                     "GROUP BY ${SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUG_KEY} " +
-                    "ORDER BY leastRecent DESC"
+                    "ORDER BY leastRecent ASC"
 
             if(numSuggestions != null)
             {

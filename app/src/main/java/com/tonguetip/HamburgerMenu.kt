@@ -107,6 +107,18 @@ fun HamburgerMenu(context: Context, title:String = "", modifier: Modifier = Modi
                     Text(text = "Quiz")
                 }
                 Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {
+                    val intent = Intent(context, UserDictionaryActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(intent)
+                    scope.launch {
+                        drawerState.apply {
+                            close()
+                        }
+                    }
+                }) {
+                    Text(text = "Dictionary")
+                }
+                Button(modifier = Modifier.padding(5.dp),shape = RoundedCornerShape(40f), onClick = {
                     val intent = Intent(context, UserMetricsActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                     context.startActivity(intent)

@@ -1,5 +1,6 @@
 package com.tonguetip
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -113,7 +115,17 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(100.dp))
                     LiveText(liveText = uiState.liveTextString)
                 }
-                if ( suggestions.isNullOrEmpty()) {
+                if (uiState.isLoading && LocalContext.current.getSharedPreferences("TONGUETIP_SETTINGS", Context.MODE_PRIVATE).equals("ChatGPT")) {
+                    Box(contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .width(64.dp)
+                        )
+                    }
+                } else if ( suggestions.isNullOrEmpty()) {
                     SuggestionsButton()
                 } else {
                     LazyColumn(
@@ -170,8 +182,11 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
     ) {
         Button(
             onClick = {
-                recognizer!!.stopListening()
-                viewModel.buttonTest(context) },
+                       if(viewModel.buttonTest(context))
+                       {
+                           recognizer!!.stopListening()
+                       }
+                 },
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.size(250.dp)
