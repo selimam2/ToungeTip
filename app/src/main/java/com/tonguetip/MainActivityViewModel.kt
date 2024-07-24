@@ -49,7 +49,7 @@ class MainActivityViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            val suggestions = suggester.getSuggestions(_uiState.value.liveTextString)
+            val suggestions = suggester.getSuggestions(textContext)
             _uiState.update { currentState ->
                 currentState.copy(
                     isListening = !currentState.isListening,
