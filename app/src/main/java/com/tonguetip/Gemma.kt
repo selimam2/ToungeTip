@@ -54,10 +54,11 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
                 .setTemperature(1.5f)
                 .setRandomSeed((0..2000000000).random())
                 .build()
-            llm = LlmInference.createFromOptions(ctx, options)
+
 
             try {
-                suggestions.add(llm.generateResponse(request).split("[\\.,\\s]".toRegex()).first())
+                llm = LlmInference.createFromOptions(ctx, options)
+                suggestions.add(llm.generateResponse(request, ).split("[\\.,\\s]".toRegex()).first())
             } catch (e : Exception) {
                 Log.e("LocalGemma::getSuggestions", "Exception", e)
             }
@@ -68,6 +69,6 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
 
         Log.d("LocalGemma::getSuggestions", "Suggestions: $suggestions")
 
-        return suggestions
+        return suggestions.distinct()
     }
 }

@@ -1,5 +1,6 @@
 package com.tonguetip
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -114,7 +115,7 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(100.dp))
                     LiveText(liveText = uiState.liveTextString)
                 }
-                if (uiState.isLoading) {
+                if (uiState.isLoading && LocalContext.current.getSharedPreferences("TONGUETIP_SETTINGS", Context.MODE_PRIVATE).equals("ChatGPT")) {
                     Box(contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .fillMaxWidth()
