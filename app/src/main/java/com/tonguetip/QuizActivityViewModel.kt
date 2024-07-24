@@ -36,6 +36,12 @@ data class StringContext(
     val partOfSpeech: PartOfSpeech
 )
 
+data class Result(
+    val question: Question,
+    val answer: String,
+    val correctness: Boolean,
+)
+
 class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
     private val _uiState = MutableStateFlow(QuizState())
     val uiState: StateFlow<QuizState> = _uiState.asStateFlow()
@@ -44,6 +50,7 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
     private var language: String = ""
     var currentQuestionIndex = 0
     var currentScore = 0
+    private var resultList = mutableListOf<Result>()
     init {
         language = nativeLanguage
         if(nativeLanguage != TranslateLanguage.ENGLISH){
@@ -166,10 +173,18 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
         if (currentQuestion != null && answer == currentQuestion.answer) {
             currentScore++
         }
+        if (currentQuestion != null) {
+            val result = Result(
+                question = currentQuestion,
+                answer = answer,
+                correctness = answer == currentQuestion.answer
+            )
+            resultList.add(result)
+        }
         currentQuestionIndex++
         if (currentQuestionIndex >= (_uiState.value.questions?.size ?: 0)) {
             _uiState.update { currentState ->
-                currentState.copy(questions = null)
+                currentState.copy(index = -1)
             }
         } else {
             // Update state with new current question
@@ -180,6 +195,10 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
                 )
             }
         }
+    }
+
+    fun getResults(): MutableList<Result> {
+        return resultList
     }
 
     suspend fun generateOptionsForDefinition(answer: String, list: List<String>): List<String> {

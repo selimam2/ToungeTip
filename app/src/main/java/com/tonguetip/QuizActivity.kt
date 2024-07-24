@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -91,7 +93,12 @@ fun QuizScreen(
                 .padding(16.dp)
                 .weight(1f) // Take up remaining space
         ) {
-            if (currentQuestion != null) {
+            if (currentQuestion == null && uiState.index != -1) {
+                // Show loading indicator if the questions are still being fetched
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else if (currentQuestion != null) {
                 QuestionView(
                     question = currentQuestion,
                     forgottenWords = forgottenWords,
@@ -100,15 +107,9 @@ fun QuizScreen(
                         viewModel.submitAnswer(answer)
                     }
                 )
-            } else {
+            } else if (uiState.index == -1){
                 // No more questions
-                Text(
-                    text = "Daily quiz finished!",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.Center)
-                )
+                ResultsView(results = viewModel.getResults())
             }
         }
     }
@@ -214,6 +215,61 @@ fun AnswerTile(answer: String, onClick: (String) -> Unit) {
         )
     }
 }
+
+@Composable
+fun ResultsView(results: List<Result>) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text(
+            text = "Results",
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        LazyColumn {
+            items(results) { result ->
+                ResultItem(result)
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultItem(result: Result) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(Color.LightGray, shape = MaterialTheme.shapes.medium)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Question: ${result.question.header}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = "Your Answer: ${result.answer}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp),
+            color = if (result.correctness) Color(0xFF388E3C) else Color.Red
+        )
+        if (!result.correctness) {
+            Text(
+                text = "Correct Answer: ${result.question.answer}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
+            )
+        }
+    }
+}
+
 
 fun generateOptions(correctAnswer: StringContext, forgottenWords: List<StringContext>?): List<String> {
     val options = mutableSetOf(correctAnswer.string)
