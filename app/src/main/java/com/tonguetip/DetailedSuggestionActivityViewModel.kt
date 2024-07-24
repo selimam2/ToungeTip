@@ -20,7 +20,7 @@ data class DetailedSuggestionState(
     val partsOfSpeech: LinkedHashMap<String, PartOfSpeech>? = null
 )
 class DetailedSuggestionActivityViewModel(private var suggestion : String,private var suggestionContext:String, nativeLanguage: String) : ViewModel() {
-    private val gpt = ChatGPTIntegration()
+    private val gpt = OpenAiCompletions()
     private val dictionaryIntegration = Dictionary()
     private var translationIntegration:TranslationService? = null
     private var shownWords: MutableList<String> = mutableListOf() // Mirror of detailedsuggestionstate words for use by translation
