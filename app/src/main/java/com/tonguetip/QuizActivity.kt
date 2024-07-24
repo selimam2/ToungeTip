@@ -253,7 +253,7 @@ fun ResultItem(result: Result) {
             text = "Question: ${result.question.header}",
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(bottom = 8.dp),
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.Black
         )
         Text(
             text = "Your Answer: ${result.answer}",
