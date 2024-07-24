@@ -20,6 +20,7 @@ import java.util.SortedSet
 import java.util.TreeSet
 
 data class UserDictionaryState(
+    val grouped: Map<Char, List<String>>?= null,
     val dictionary: MutableMap<String, MutableSet<String>>? = null,
 )
 class UserDictionaryActivityViewModel() : ViewModel(), DefaultLifecycleObserver {
@@ -30,6 +31,7 @@ class UserDictionaryActivityViewModel() : ViewModel(), DefaultLifecycleObserver 
     }
     private fun updateDictionary() {
         viewModelScope.launch {
+            val wordList: MutableList<String> = mutableListOf()
             val dict: MutableMap<String, MutableSet<String>> = mutableMapOf<String, MutableSet<String>>()
             val prevSuggestions = DatabaseHandler.getNPastSuggestions()
             for(suggestion in prevSuggestions){
@@ -42,6 +44,7 @@ class UserDictionaryActivityViewModel() : ViewModel(), DefaultLifecycleObserver 
                         }
                     }
                     else{
+                        wordList.add(word)
                         val contextStrings = mutableSetOf<String>()
                         for(context in contexts){
                             contextStrings.add(context.contextString)
@@ -54,7 +57,8 @@ class UserDictionaryActivityViewModel() : ViewModel(), DefaultLifecycleObserver 
 
             _uiState.update { currentState ->
                 currentState.copy(
-                    dictionary = dict.toSortedMap()
+                    grouped = wordList.groupBy { it[0] },
+                    dictionary = dict
                 )
             }
         }
