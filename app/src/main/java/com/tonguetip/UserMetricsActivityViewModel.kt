@@ -3,6 +3,8 @@ package com.tonguetip
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +17,7 @@ import java.time.LocalDate
 data class UserMetricsState(
     val metrics: List<Metric>? = null,
 )
-class UserMetricsActivityViewModel() : ViewModel() {
+class UserMetricsActivityViewModel() : ViewModel(), DefaultLifecycleObserver {
     private val _uiState = MutableStateFlow(UserMetricsState())
     val uiState: StateFlow<UserMetricsState> = _uiState.asStateFlow()
     init {
@@ -35,5 +37,10 @@ class UserMetricsActivityViewModel() : ViewModel() {
                 )
             }
         }
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        updateMetrics()
     }
 }
