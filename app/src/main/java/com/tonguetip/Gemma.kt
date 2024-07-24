@@ -4,6 +4,9 @@ import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartOfSpeechInterface {
     private val MODEL_PATH = "/data/local/tmp/llm/"
@@ -43,19 +46,27 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
         """.trimIndent()
         val context1 = context.trim()
         var suggestions = mutableListOf<String>()
+        val request = prompt + context1
+        val a = llm.sizeInTokens(request) + 5
         for (i in 1..8)
         {
-            val request = prompt + context1
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
                 .setTopK(40)
-                .setMaxTokens(llm.sizeInTokens(request) + 4)
+                .setMaxTokens(a)
                 .setTemperature(1.5f)
                 .setRandomSeed((0..2000000000).random())
                 .build()
             llm.close()
             llm = LlmInference.createFromOptions(ctx, options)
-            suggestions.add(llm.generateResponse(request))
+            try {
+                suggestions.add(llm.generateResponse(request).split("[\\.,\\s]".toRegex()).first())
+            }
+            catch (e : Exception)
+            {
+                println("getSuggestions: " + e.message)
+            }
+
         }
         for (j in suggestions)
         {
