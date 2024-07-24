@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
 class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartOfSpeechInterface {
     private val MODEL_PATH = "/data/local/tmp/llm/"
     private val MODEL_FILE_NAME = "gemma-2b-it-gpu-int4.bin"
-    private var llm : LlmInference
     private val ctx : android.content.Context
+
     init {
         val modelPath = File(MODEL_PATH + MODEL_FILE_NAME)
         if (!modelPath.exists()) {
@@ -23,17 +23,7 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
             }
         }
 
-        // Set the configuration options for the LLM Inference task
-        val options = LlmInference.LlmInferenceOptions.builder()
-            .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
-            .setTopK(40)
-            .setMaxTokens(50)
-            .setTemperature(1.5f)
-            .setRandomSeed((0..2000000000).random())
-            .build()
         ctx = context
-        // Create an instance of the LLM Inference task
-        llm = LlmInference.createFromOptions(context, options)
     }
 
     override suspend fun getPartOfSpeech(context: String, target: String): PartOfSpeech {
@@ -42,42 +32,44 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
 
     override suspend fun getSuggestions(context: String): List<String> {
         val prompt = """
-            Only output a continuation of a single word for the following dialogue.
+            Only output a continuation of a single word for the following dialogue. 
         """.trimIndent()
-        val context1 = context.trim()
-        var suggestions = mutableListOf<String>()
-        val request = prompt + context1
-        val a = llm.sizeInTokens(request) + 5
-        for (i in 1..8)
-        {
-            val options = LlmInference.LlmInferenceOptions.builder()
+
+        val suggestions = mutableListOf<String>()
+        val request = prompt + context
+
+        var options = LlmInference.LlmInferenceOptions.builder()
+            .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
+            .setTopK(40)
+            .setMaxTokens(200)
+            .setTemperature(1.5f)
+            .setRandomSeed((0..2000000000).random())
+            .build()
+        var llm = LlmInference.createFromOptions(ctx, options)
+        val maxTokens = llm.sizeInTokens(request) + 5
+        llm.close()
+
+        for (i in 1..8) {
+            options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
                 .setTopK(40)
-                .setMaxTokens(a)
+                .setMaxTokens(maxTokens)
                 .setTemperature(1.5f)
                 .setRandomSeed((0..2000000000).random())
                 .build()
-            llm.close()
             llm = LlmInference.createFromOptions(ctx, options)
+
             try {
                 suggestions.add(llm.generateResponse(request).split("[\\.,\\s]".toRegex()).first())
-            }
-            catch (e : Exception)
-            {
-                println("getSuggestions: " + e.message)
+            } catch (e : Exception) {
+                Log.e("LocalGemma::getSuggestions", "Exception", e)
             }
 
-        }
-        for (j in suggestions)
-        {
-            println(j)
-            println("Done")
+            llm.close()
+
         }
 
-
-
-        llm.close()
-        Log.d("GemmaCompletions::getSuggestions", "Suggestions in  attempt(s)")
+        Log.d("LocalGemma::getSuggestions", "Suggestions: $suggestions")
 
         return suggestions
     }

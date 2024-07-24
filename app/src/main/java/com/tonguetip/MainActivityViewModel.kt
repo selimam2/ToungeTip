@@ -51,7 +51,7 @@ class MainActivityViewModel : ViewModel() {
             currentState -> currentState.copy(isLoading = true)
         }
         viewModelScope.launch {
-            val suggestions = suggester.getSuggestions(textContext)
+            val suggestions = suggester.getSuggestions(textContext.trim())
             _uiState.update { currentState ->
                 currentState.copy(
                     isListening = !currentState.isListening,

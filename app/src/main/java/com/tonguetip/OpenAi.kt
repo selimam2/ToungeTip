@@ -98,7 +98,7 @@ class OpenAiCompletions : SuggestionsInterface, PartOfSpeechInterface {
                         role = "system"
                     ),
                     Message(
-                        content = "sentence: ${context.trim()}. target word: $target",
+                        content = "sentence: $context. target word: $target",
                         role = "user"
                     )
                 ),
@@ -146,7 +146,7 @@ class OpenAiCompletions : SuggestionsInterface, PartOfSpeechInterface {
                         role = "system"
                     ),
                     Message(
-                        content = context.trim(),
+                        content = context,
                         role = "user"
                     )
                 ),
