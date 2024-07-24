@@ -311,7 +311,7 @@ class DatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                         getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_DATE)),
                         DateTimeFormatter.BASIC_ISO_DATE)
 
-                    val contextPartOfSpeech = PartOfSpeech.fromString(getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_SENTENCE)))
+                    val contextPartOfSpeech = PartOfSpeech.fromString(getString(getColumnIndexOrThrow(SuggestionHistoryContract.SuggestionContextsEntry.COLUMN_SUGGESTION_PARTOFSPEECH)))
 
                     suggestionContexts.add(SuggestionContext(contextString,contextDate,contextPartOfSpeech))
                 }
