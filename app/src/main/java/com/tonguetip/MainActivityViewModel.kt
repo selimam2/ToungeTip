@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 data class MainUIState(
     val isListening: Boolean = true,
     val liveTextString: String = "",
     var suggestions: List<String>? = null,
+    val isLoading: Boolean = false
 )
 
 class MainActivityViewModel : ViewModel() {
@@ -47,14 +47,17 @@ class MainActivityViewModel : ViewModel() {
             }
         }
 
-
+        _uiState.update {
+            currentState -> currentState.copy(isLoading = true)
+        }
         viewModelScope.launch {
             val suggestions = suggester.getSuggestions(textContext)
             _uiState.update { currentState ->
                 currentState.copy(
                     isListening = !currentState.isListening,
                     liveTextString = currentState.liveTextString,
-                    suggestions = suggestions
+                    suggestions = suggestions,
+                    isLoading = false
                 )
             }
         }

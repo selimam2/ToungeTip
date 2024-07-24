@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -113,7 +114,17 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(100.dp))
                     LiveText(liveText = uiState.liveTextString)
                 }
-                if ( suggestions.isNullOrEmpty()) {
+                if (uiState.isLoading) {
+                    Box(contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .width(64.dp)
+                        )
+                    }
+                } else if ( suggestions.isNullOrEmpty()) {
                     SuggestionsButton()
                 } else {
                     LazyColumn(
