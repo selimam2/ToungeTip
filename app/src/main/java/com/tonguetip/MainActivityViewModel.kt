@@ -1,6 +1,8 @@
 package com.tonguetip
 
 import android.content.Context
+import android.text.Html
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,13 @@ class MainActivityViewModel : ViewModel() {
             "Gemma" -> {
                 suggester = LocalGemma(ctx)
             }
+        }
+
+        val textContext = _uiState.value.liveTextString
+
+        if (textContext.isBlank()) {
+            Toast.makeText(ctx, "Please continue speaking and try again", Toast.LENGTH_SHORT).show()
+            return
         }
 
         viewModelScope.launch {

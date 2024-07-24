@@ -4,7 +4,7 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import java.io.File
 import java.io.FileOutputStream
 
-class LocalGemma(context: android.content.Context) : SuggestionsInterface {
+class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartOfSpeechInterface {
     private val MODEL_PATH = "/data/local/tmp/llm/"
     private val MODEL_FILE_NAME = "gemma-2b-it-gpu-int4.bin"
     private var llm : LlmInference
