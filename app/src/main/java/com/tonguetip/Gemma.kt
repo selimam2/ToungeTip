@@ -4,9 +4,6 @@ import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import java.io.File
 import java.io.FileOutputStream
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartOfSpeechInterface {
     private val MODEL_PATH = "/data/local/tmp/llm/"
@@ -49,7 +46,7 @@ class LocalGemma(context: android.content.Context) : SuggestionsInterface, PartO
         val maxTokens = llm.sizeInTokens(request) + 5
         llm.close()
 
-        for (i in 1..8) {
+        for (i in 1..4) {
             options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH + MODEL_FILE_NAME)
                 .setTopK(40)
