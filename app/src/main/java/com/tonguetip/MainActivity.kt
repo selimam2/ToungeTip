@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.size
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -50,6 +51,20 @@ class MainActivity : ComponentActivity() {
         recognizer = VoiceRecognizer(this)
         recognizer!!.startListening()
         super.onCreate(savedInstanceState)
+
+        // Close activity on back button
+        val callback = object : OnBackPressedCallback(
+            true // default to enabled
+        ) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        }
+        onBackPressedDispatcher.addCallback(
+            this, // LifecycleOwner
+            callback
+        )
+
         enableEdgeToEdge()
         setContent {
             TongueTipTheme {
@@ -58,6 +73,20 @@ class MainActivity : ComponentActivity() {
                     MainScreen()
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(recognizer != null){
+            recognizer!!.startListening()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if(recognizer != null){
+            recognizer!!.stopListening()
         }
     }
 }

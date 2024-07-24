@@ -54,6 +54,11 @@ class QuizActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStop() {
+        DatabaseHandler.closeDatabase()
+        super.onStop()
+    }
 }
 
 @Composable
