@@ -20,7 +20,7 @@ data class DetailedSuggestionState(
     val partsOfSpeech: LinkedHashMap<String, PartOfSpeech>? = null
 )
 class DetailedSuggestionActivityViewModel(private var suggestion : String,private var suggestionContext:String, nativeLanguage: String) : ViewModel() {
-    private val gpt = OpenAiCompletions()
+    private val aiBackend: PartOfSpeechInterface = OpenAiCompletions()
     private val dictionaryIntegration = Dictionary()
     private var translationIntegration:TranslationService? = null
     private var shownWords: MutableList<String> = mutableListOf() // Mirror of detailedsuggestionstate words for use by translation
@@ -66,7 +66,7 @@ class DetailedSuggestionActivityViewModel(private var suggestion : String,privat
          viewModelScope.launch {
              val partsOfSpeech = linkedMapOf<String, PartOfSpeech>()
              for (sug in suggestions) {
-                 partsOfSpeech[suggestion] = (gpt.getPartOfSpeech(suggestionContext, suggestion))
+                 partsOfSpeech[suggestion] = (aiBackend.getPartOfSpeech(suggestionContext, suggestion))
              }
              _uiState.update { currentState ->
                  currentState.copy(
