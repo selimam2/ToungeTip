@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // 3 types of questions
-enum class QuestionTypes {
+enum class QuestionType {
     FINISH_SENTENCE,
     DEFINE_WORD,
     NATIVE_TRANSLATION
@@ -25,7 +25,7 @@ data class QuizState(
 
 // Must have various pieces of information for a single question
 data class Question(
-    val questionType: QuestionTypes,
+    val questionType: QuestionType,
     val header: String,
     val answer: String?,
     val partOfSpeech: PartOfSpeech
@@ -146,7 +146,7 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
                 val entry = dictionaryIntegration.getDictionaryEntry(word.string) ?: continue
                 val ans = entry.mainDefinition?.definition
                 val question = Question(
-                    questionType = QuestionTypes.DEFINE_WORD,
+                    questionType = QuestionType.DEFINE_WORD,
                     header = word.string,
                     answer = ans,
                     partOfSpeech = word.partOfSpeech
@@ -157,7 +157,7 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
 
         for ((key, value) in forgottenSentences) {
             val question = Question(
-                questionType = QuestionTypes.FINISH_SENTENCE,
+                questionType = QuestionType.FINISH_SENTENCE,
                 header = key.string,
                 answer = value,
                 partOfSpeech = key.partOfSpeech
@@ -168,7 +168,7 @@ class QuizActivityViewModel(nativeLanguage: String) : ViewModel() {
         for ((key, value) in translatedWords) {
             // Header is set to translated word, options will be in english
             val question = Question(
-                questionType = QuestionTypes.NATIVE_TRANSLATION,
+                questionType = QuestionType.NATIVE_TRANSLATION,
                 header = value,
                 answer = key.string,
                 partOfSpeech = key.partOfSpeech

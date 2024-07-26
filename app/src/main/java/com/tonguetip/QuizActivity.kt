@@ -136,7 +136,7 @@ fun QuestionView(question: Question, forgottenWords: List<StringContext>?, viewM
     )
 
     // If we are defining a word, switch the string
-    if (question.questionType == QuestionTypes.DEFINE_WORD) {
+    if (question.questionType == QuestionType.DEFINE_WORD) {
         ans = StringContext(
             string = question.header,
             partOfSpeech = question.partOfSpeech
@@ -147,7 +147,7 @@ fun QuestionView(question: Question, forgottenWords: List<StringContext>?, viewM
 
     // Set initial options and start loading
     LaunchedEffect(question, forgottenWords) {
-        if (question.questionType == QuestionTypes.DEFINE_WORD) {
+        if (question.questionType == QuestionType.DEFINE_WORD) {
             options.value = viewModel.generateOptionsForDefinition(
                 answer = question.answer,
                 list = initialOptions
