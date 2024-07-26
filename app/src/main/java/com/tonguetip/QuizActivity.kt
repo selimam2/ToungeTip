@@ -70,9 +70,9 @@ fun QuizScreen(
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current)
     val forgottenWords = uiState.forgottenWords
+    val score = uiState.score
+    val currentIndex = viewModel.getCurrentQuestionIndex()
     val currentQuestion = viewModel.getCurrentQuestion()
-    val score = viewModel.currentScore
-    val currentIndex = viewModel.currentQuestionIndex
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -98,6 +98,14 @@ fun QuizScreen(
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
+            } else if (forgottenWords == null) {
+                // User has to fill the database more before Quiz is available
+                Text(
+                    text = "More suggestions required before quiz mode is available",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else if (currentQuestion != null) {
                 QuestionView(
                     question = currentQuestion,
@@ -107,7 +115,7 @@ fun QuizScreen(
                         viewModel.submitAnswer(answer)
                     }
                 )
-            } else if (uiState.index == -1){
+            } else {
                 // No more questions
                 ResultsView(results = viewModel.getResults())
             }
@@ -121,16 +129,20 @@ fun QuestionView(question: Question, forgottenWords: List<StringContext>?, viewM
     val options = remember { mutableStateOf<List<String>>(emptyList()) }
     val isLoading = remember { mutableStateOf(true) } // State to track loading
 
+    // Establish context of the answer
     var ans = StringContext(
         string = question.answer!!,
         partOfSpeech = question.partOfSpeech
     )
+
+    // If we are defining a word, switch the string
     if (question.questionType == QuestionTypes.DEFINE_WORD) {
         ans = StringContext(
             string = question.header,
             partOfSpeech = question.partOfSpeech
         )
     }
+
     val initialOptions = generateOptions(ans, forgottenWords)
 
     // Set initial options and start loading
@@ -188,8 +200,8 @@ fun AnswerTile(answer: String, onClick: (String) -> Unit) {
             .padding(8.dp)
             .background(Color.LightGray, shape = MaterialTheme.shapes.medium)
             .combinedClickable(
-                onClick = { onClick(answer) }, // Regular click
-                onLongClick = { showDialog = true } // Long press
+                onClick = { onClick(answer) },
+                onLongClick = { showDialog = true }
             )
             .padding(16.dp),
         contentAlignment = Alignment.Center
@@ -275,14 +287,17 @@ fun ResultItem(result: Result) {
 fun generateOptions(correctAnswer: StringContext, forgottenWords: List<StringContext>?): List<String> {
     val options = mutableSetOf(correctAnswer.string)
 
-    // Ensure forgottenWords is not null and filter out the correct answer
+    // Filter out the answer and any words that are the same part of speech
+    // e.g. if the answer is a noun, then it all other options should
+    // not be nouns to be reduce confusion on potentially multiple correct
+    // answers shown.
     val wordsListNoAnswer = forgottenWords?.filter {
         it.string != correctAnswer.string
     } ?: emptyList()
 
     val wordsList = wordsListNoAnswer.filter{
         it.partOfSpeech != correctAnswer.partOfSpeech
-    } ?: emptyList()
+    }
 
     // Randomly select 3 words from the list, if there are enough words
     val additionalOptions = if (wordsList.size >= 3) {
