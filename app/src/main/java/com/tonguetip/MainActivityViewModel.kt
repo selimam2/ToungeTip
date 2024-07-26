@@ -27,7 +27,7 @@ class MainActivityViewModel : ViewModel() {
 
     // Handle business logic
 
-    fun buttonTest(ctx: Context) : Boolean {
+    fun getSuggestions(ctx: Context) : Boolean {
         // Strategy design pattern: Choose AI backend based on user preferences
         // Store the backend as an implementor of SuggestionsInterface
         val sharedPrefs = ctx.getSharedPreferences("TONGUETIP_SETTINGS", Context.MODE_PRIVATE)

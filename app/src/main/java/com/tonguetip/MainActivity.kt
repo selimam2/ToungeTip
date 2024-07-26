@@ -182,7 +182,7 @@ fun SuggestionsButton(modifier: Modifier = Modifier, viewModel: MainActivityView
     ) {
         Button(
             onClick = {
-                       if(viewModel.buttonTest(context))
+                       if(viewModel.getSuggestions(context))
                        {
                            recognizer!!.stopListening()
                        }
