@@ -27,15 +27,17 @@ class MainActivityViewModel : ViewModel() {
 
     // Handle business logic
 
-    fun getSuggestions(ctx: Context) : Boolean {
+    fun getSuggestions(ctx: Context, rec : VoiceRecognizer?)  {
         // Strategy design pattern: Choose AI backend based on user preferences
         // Store the backend as an implementor of SuggestionsInterface
         val sharedPrefs = ctx.getSharedPreferences("TONGUETIP_SETTINGS", Context.MODE_PRIVATE)
         val textContext = _uiState.value.liveTextString
         if (textContext.isBlank()) {
             Toast.makeText(ctx, "Please continue speaking and try again", Toast.LENGTH_SHORT).show()
-            return false
+            return
         }
+        rec!!.stopListening()
+
 
         when (sharedPrefs.getString("LLMOption", "ChatGPT")) {
             "ChatGPT" -> {
@@ -61,7 +63,6 @@ class MainActivityViewModel : ViewModel() {
                 )
             }
         }
-        return true
     }
 
     fun updateLiveText(str: String){
