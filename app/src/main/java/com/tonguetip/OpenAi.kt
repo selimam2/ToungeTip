@@ -84,6 +84,8 @@ class OpenAiCompletions : SuggestionsInterface, PartOfSpeechInterface {
             You must return what part of speech that target word is within the sentence and nothing else.
             The part of speech must be one of: noun, pronoun, verb, adjective, adverb, preposition, conjunction, exclamation
             You must realize that if you mess up, you will fatally harm others.
+
+            
         """.trimIndent()
 
         val maxAttempts = 3
