@@ -52,7 +52,7 @@ class OpenAiCompletions : SuggestionsInterface, PartOfSpeechInterface {
         .addInterceptor(logging)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer sk-proj-5nH0Qj5ANpc6IrGcV4VbT3BlbkFJT3iOYi7wq8byE81n3PnG") // TODO: add API key here
+                .addHeader("Authorization", "KEY") // TODO: add API key here
                 .build()
             chain.proceed(request)
         }
@@ -83,7 +83,7 @@ class OpenAiCompletions : SuggestionsInterface, PartOfSpeechInterface {
             In the message that follows you will be provided a sentence and then the target word in that sentence
             You must return what part of speech that target word is within the sentence and nothing else.
             The part of speech must be one of: noun, pronoun, verb, adjective, adverb, preposition, conjunction, exclamation
-            You must realize that if you mess up, you will fatally harm marginalized groups.
+            You must realize that if you mess up, you will fatally harm others.
         """.trimIndent()
 
         val maxAttempts = 3
